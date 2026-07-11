@@ -356,6 +356,28 @@
   .timer-actions .btn{flex:1}
 
   .foot{margin:22px 0 6px;font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+
+  /* ============ 설치 안내 모달 ============ */
+  .modal{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;padding:0;background:rgba(16,24,40,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+  @media(min-width:520px){.modal{align-items:center;padding:18px}}
+  .modal[hidden]{display:none}
+  .modal-card{
+    width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--r-xl) var(--r-xl) 0 0;box-shadow:var(--shadow-lg);
+    padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:sheetUp .28s cubic-bezier(.22,1,.36,1);
+  }
+  @media(min-width:520px){.modal-card{border-radius:var(--r-lg);animation:viewIn .22s ease}}
+  @keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .modal-title{font-size:18px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+  .modal-title .mi{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary-strong);font-size:17px}
+  .modal-x{width:34px;height:34px;flex:none;border:none;background:var(--surface-2);border-radius:10px;font-size:21px;line-height:1;color:var(--text-2);cursor:pointer;transition:background .15s}
+  .modal-x:hover{background:var(--surface-3)}
+  .modal-body ol{margin:0;padding-left:0;list-style:none;counter-reset:st;display:flex;flex-direction:column;gap:12px}
+  .modal-body li{counter-increment:st;position:relative;padding-left:38px;font-size:14.5px;line-height:1.6;color:var(--text)}
+  .modal-body li::before{content:counter(st);position:absolute;left:0;top:-1px;width:26px;height:26px;border-radius:8px;background:var(--primary);color:var(--primary-ink);font-size:13px;font-weight:800;display:grid;place-items:center}
+  .modal-body b{font-weight:800;color:var(--primary-strong)}
+  .modal-note{margin-top:14px;font-size:12.5px;color:var(--muted);line-height:1.6}
 </style>
 </head>
 <body>
@@ -508,6 +530,19 @@
   </main>
 
   <p class="foot">CPX 표준 임상표현 56 · 비복원 추출 · 분야 순환으로 골고루 연습<br>모든 데이터는 이 기기에만 저장됩니다.</p>
+</div>
+
+<!-- 설치 방법 안내 모달 -->
+<div class="modal" id="installHelp" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-label="앱 설치 방법">
+    <div class="modal-head">
+      <span class="modal-title"><span class="mi">＋</span>홈 화면에 앱 설치</span>
+      <button class="modal-x" data-close aria-label="닫기">×</button>
+    </div>
+    <div class="modal-body" id="installHelpBody"></div>
+    <p class="modal-note" id="installHelpNote"></p>
+    <button class="btn primary block" data-close style="margin-top:18px">알겠어요</button>
+  </div>
 </div>
 
 <script>
@@ -1006,28 +1041,125 @@
 </script>
 
 <script>
-/* ===== PWA: 서비스 워커 등록 + 설치 버튼 ===== */
+/* ===== PWA: 서비스 워커 + 설치 (네이티브 프롬프트 or 브라우저별 안내) ===== */
 (function(){
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){
       navigator.serviceWorker.register('sw.js').catch(function(){});
     });
   }
+
   var deferred = null;
   var btn = document.getElementById('installBtn');
+  var overlay = document.getElementById('installHelp');
+  var helpBody = document.getElementById('installHelpBody');
+  var helpNote = document.getElementById('installHelpNote');
+
+  function isStandalone(){
+    return (window.matchMedia && (
+             window.matchMedia('(display-mode: standalone)').matches ||
+             window.matchMedia('(display-mode: window-controls-overlay)').matches))
+        || window.navigator.standalone === true;
+  }
+
+  function env(){
+    var ua = navigator.userAgent || '';
+    return {
+      ios: /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+      android: /Android/.test(ua),
+      inApp: /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|everytimeApp|; wv\)/i.test(ua),
+      firefox: /Firefox|FxiOS/.test(ua),
+      samsung: /SamsungBrowser/.test(ua)
+    };
+  }
+
+  function fillHelp(){
+    var e = env(), steps, note = '';
+    if(e.inApp){
+      steps = [
+        '지금은 <b>카카오톡·인스타그램 등 앱 안의 브라우저</b>예요. 여기서는 설치가 되지 않습니다.',
+        '오른쪽 위 <b>⋮ 또는 공유 아이콘</b>을 누르세요.',
+        '<b>‘다른 브라우저로 열기’</b>(Chrome·Safari 등)를 선택한 뒤, 그 화면에서 다시 설치하세요.'
+      ];
+    } else if(e.ios){
+      steps = [
+        '아이폰·아이패드는 <b>Safari(사파리)</b>에서만 설치돼요. (크롬 앱은 안 됩니다)',
+        '화면 아래 가운데의 <b>공유 버튼</b>(□에 ↑ 표시)을 누르세요.',
+        '목록을 내려 <b>‘홈 화면에 추가’</b> → 오른쪽 위 <b>‘추가’</b>.'
+      ];
+      note = '설치하면 사파리 주소창 없이 앱처럼 전체화면으로 열립니다.';
+    } else if(e.samsung){
+      steps = [
+        '삼성 인터넷 하단의 <b>≡ 메뉴</b>를 누르세요.',
+        '<b>‘현재 페이지 추가’ → ‘홈 화면’</b>을 선택하세요.',
+        '홈 화면에 생긴 아이콘으로 실행하면 됩니다.'
+      ];
+    } else if(e.android){
+      steps = [
+        '크롬 오른쪽 위 <b>⋮ 메뉴</b>를 누르세요.',
+        '<b>‘앱 설치’</b> 또는 <b>‘홈 화면에 추가’</b>를 선택하세요.',
+        '<b>설치</b>를 누르면 완료됩니다.'
+      ];
+    } else if(e.firefox){
+      steps = [
+        '지금 브라우저(Firefox 등)는 <b>앱 설치를 지원하지 않아요.</b>',
+        '<b>Chrome(크롬)</b> 또는 <b>Edge(엣지)</b>로 이 페이지를 다시 열어주세요.',
+        '그 브라우저에서 [설치] 버튼을 누르면 됩니다.'
+      ];
+    } else {
+      steps = [
+        '주소창(URL) <b>오른쪽 끝의 설치 아이콘</b>(⊕ 또는 모니터 모양)을 누르세요.',
+        '안 보이면 <b>⋮ 메뉴 → ‘앱 설치’ / ‘CPX 추출기 설치’</b>를 선택하세요.',
+        '창이 뜨면 <b>설치</b>를 누르면 완료됩니다.'
+      ];
+      note = '설치 아이콘이 없다면 이미 설치됐거나, 페이지를 새로고침하면 나타납니다.';
+    }
+    helpBody.innerHTML = '<ol>' + steps.map(function(s){ return '<li>'+s+'</li>'; }).join('') + '</ol>';
+    helpNote.textContent = note;
+    helpNote.style.display = note ? '' : 'none';
+  }
+
+  function openHelp(){ if(overlay){ fillHelp(); overlay.hidden = false; } }
+  function closeHelp(){ if(overlay) overlay.hidden = true; }
+
+  function refreshBtn(){ if(btn) btn.hidden = isStandalone(); }
+
   window.addEventListener('beforeinstallprompt', function(e){
     e.preventDefault();
     deferred = e;
-    if(btn) btn.hidden = false;
+    refreshBtn();
   });
+
   if(btn){
     btn.addEventListener('click', function(){
-      if(!deferred) return;
-      deferred.prompt();
-      deferred.userChoice.finally(function(){ deferred = null; btn.hidden = true; });
+      if(deferred){
+        deferred.prompt();
+        deferred.userChoice.then(function(res){
+          if(res && res.outcome === 'accepted') btn.hidden = true;
+          deferred = null;
+        });
+      } else {
+        openHelp();
+      }
     });
   }
-  window.addEventListener('appinstalled', function(){ if(btn) btn.hidden = true; });
+
+  window.addEventListener('appinstalled', function(){
+    deferred = null;
+    if(btn) btn.hidden = true;
+    closeHelp();
+  });
+
+  if(overlay){
+    overlay.addEventListener('click', function(e){
+      if(e.target === overlay || e.target.hasAttribute('data-close')) closeHelp();
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && !overlay.hidden) closeHelp();
+    });
+  }
+
+  refreshBtn();
 })();
 </script>
 </body>

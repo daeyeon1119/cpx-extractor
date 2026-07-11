@@ -248,6 +248,7 @@
   }
   .result .placeholder{font-size:16px;color:var(--muted);font-weight:500}
   .result .placeholder.done{font-size:20px;font-weight:800;color:var(--primary-strong)}
+  .result .done-note{margin-top:2px;font-size:13px;font-weight:700;color:var(--primary-strong);letter-spacing:.02em}
   @keyframes pop{0%{transform:scale(.5) translateY(8px);opacity:0}100%{transform:scale(1);opacity:1}}
   @keyframes badgeIn{0%{transform:translateY(6px);opacity:0}100%{transform:none;opacity:1}}
 
@@ -557,7 +558,8 @@
     '신장/비뇨': ['다뇨증','핍뇨','붉은색 소변','배뇨이상'],
     '전신': ['발열','쉽게 멍이 듦','피로','체중 감소','체중 증가/비만'],
     '관절/근골격/피부': ['관절 통증/부기','목통증','허리통증','피부발진'],
-    '정신/신경': ['기분 변화','불안','수면장애','기억력 저하','어지럼','두통','경련','근력/감각이상','의식장애','떨림/운동이상'],
+    '정신': ['기분 변화','불안','수면장애'],
+    '신경': ['기억력 저하','어지럼','두통','경련','근력/감각이상','의식장애','떨림/운동이상'],
     '산부/여성/소아': ['유방통','유방덩이','질분비물','질출혈','월경이상','월경통','산전진찰','성장/발달지연','예방접종'],
     '상담': ['음주상담','금연상담','물질 오남용','나쁜 소식 전하기','가정폭력','성폭력','자살']
   };
@@ -642,7 +644,16 @@
     setMode(mode, true);
     showStage(true);
     if(pool.length === 0){
-      $('result').innerHTML = '<span class="placeholder done">🎉 모든 케이스 완료</span>';
+      const lastItem = drawn.length ? drawn[drawn.length-1] : null;
+      if(lastItem){
+        $('result').innerHTML =
+          (lastItem.c ? '<span class="cat-badge">'+escapeHtml(lastItem.c)+'</span>' : '')
+          + '<span class="word">'+escapeHtml(lastItem.w)+'</span>'
+          + '<div class="done-note">🎉 모두 완료!</div>';
+        $('noteCase').value = lastItem.w;
+      } else {
+        $('result').innerHTML = '<span class="placeholder done">🎉 모든 케이스 완료</span>';
+      }
     } else if(s.last){
       $('result').innerHTML = '<span class="placeholder">이어서 뽑으세요 · 직전: '+escapeHtml(s.last)+'</span>';
       $('noteCase').value = s.last;
@@ -724,9 +735,11 @@
     if(bulkCat){ pool = pool.filter(it => it.c !== bulkCat); }
     drawn.push({w:item.w, c:item.c});
     lastCat = item.c;
+    const finished = pool.length === 0;
     $('result').innerHTML =
       (item.c ? '<span class="cat-badge">'+escapeHtml(item.c)+'</span>' : '')
-      + '<span class="word">'+escapeHtml(item.w)+'</span>';
+      + '<span class="word">'+escapeHtml(item.w)+'</span>'
+      + (finished ? '<div class="done-note">🎉 마지막 케이스 · 모두 완료!</div>' : '');
     $('noteCase').value = item.w;
     render();
     save();
@@ -745,19 +758,23 @@
       $('probText').innerHTML = '분야당 1개 · 남은 분야 <b>'+remCats+'</b>개';
     }
     $('drawBtn').disabled = (n === 0);
-    if(n === 0){
-      $('result').innerHTML = '<span class="placeholder done">🎉 모든 케이스 완료</span>';
-    }
     renderProgress();
     renderCats();
     renderHistory();
   }
 
   function renderProgress(){
-    const total = roundTotal || (pool.length + drawn.length);
-    const done = drawn.length;
+    let total, done, unit = '';
+    if(mode === 'once' && Object.keys(catTotals).length){
+      total = Object.keys(catTotals).length;      // 전체 분야 수
+      done = total - uniqueCats().length;          // 뽑은 분야 수
+      unit = ' 분야';
+    } else {
+      total = roundTotal || (pool.length + drawn.length);
+      done = drawn.length;
+    }
     $('progDone').textContent = done;
-    $('progTotal').textContent = total;
+    $('progTotal').textContent = total + unit;
     $('progFill').style.width = total ? (done/total*100)+'%' : '0%';
   }
 
@@ -766,14 +783,17 @@
     if(cats.length === 0){ return; }
     const remByCat = {};
     pool.forEach(it=>{ if(it.c) remByCat[it.c] = (remByCat[it.c]||0)+1; });
+    const onceMode = (mode === 'once');
     $('catOverview').innerHTML = cats.map(c=>{
       const total = catTotals[c];
       const rem = remByCat[c] || 0;
       const done = total - rem;
-      const pct = total ? (done/total*100) : 0;
-      return '<div class="cat-card'+(rem===0?' done':'')+'">'
+      const consumed = (rem === 0);
+      const fracTxt = onceMode ? (consumed ? '뽑음' : '대기') : (done + '/' + total);
+      const pct = onceMode ? (consumed ? 100 : 0) : (total ? (done/total*100) : 0);
+      return '<div class="cat-card'+(consumed?' done':'')+'">'
         + '<div class="cat-top"><span class="cat-name">'+escapeHtml(c)+'</span>'
-        + '<span class="cat-frac">'+done+'/'+total+'</span></div>'
+        + '<span class="cat-frac">'+fracTxt+'</span></div>'
         + '<div class="cat-bar"><span style="width:'+pct+'%"></span></div></div>';
     }).join('');
   }

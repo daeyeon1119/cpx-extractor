@@ -197,6 +197,24 @@
   .cov-hint{font-size:12px;color:var(--muted)}
   .cov-all{border:none;background:none;padding:0;font-size:12px;font-weight:700;color:var(--primary-strong);cursor:pointer;text-decoration:underline}
 
+  /* 케이스 개별 선택 */
+  .pick-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12.5px;color:var(--text-2);font-weight:700}
+  .pick-head b{color:var(--primary-strong)}
+  .pick-group{margin-bottom:13px}
+  .pick-group:last-child{margin-bottom:0}
+  .pick-group-head{display:flex;align-items:baseline;gap:8px;margin-bottom:7px}
+  .pick-gname{font-size:11.5px;font-weight:800;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+  .pick-gall{border:none;background:none;font-size:11.5px;font-weight:700;color:var(--primary-strong);cursor:pointer;padding:0;text-decoration:underline}
+  .pick-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .case-chip{
+    font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);
+    font-family:inherit;transition:background .15s,border-color .15s,color .15s,transform .08s;
+  }
+  .case-chip:hover{border-color:var(--muted)}
+  .case-chip:active{transform:scale(.95)}
+  .case-chip.on{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-strong);font-weight:700}
+
   .custom-toggle{
     width:100%;margin-top:14px;border:1px dashed var(--border-strong);background:transparent;
     color:var(--text-2);font-weight:600;font-size:14px;padding:12px;border-radius:var(--r-sm);
@@ -435,13 +453,16 @@
             <span id="presetLabel">CPX 56 케이스 시작</span>
           </button>
         </div>
-        <button class="custom-toggle" id="customToggle">
-          직접 목록 입력하기 <span class="chev">▾</span>
+        <button class="custom-toggle" id="casePickToggle">
+          원하는 케이스만 골라 연습하기 <span class="chev">▾</span>
         </button>
-        <div class="custom-box" id="customBox">
-          <textarea id="words" placeholder="한 줄에 하나씩, 또는 쉼표로 구분해 입력하세요.&#10;예) 사과, 바나나, 포도&#10;또는&#10;철수&#10;영희"></textarea>
-          <div class="hint">줄바꿈 또는 쉼표로 구분합니다. 중복 단어도 각각 들어갑니다.</div>
-          <button class="btn block" id="loadBtn" style="margin-top:10px">이 목록으로 시작</button>
+        <div class="custom-box" id="casePickBox">
+          <div class="pick-head">
+            <span id="pickCount">선택된 케이스 <b>0</b>개</span>
+            <button type="button" class="cov-all" id="pickClearBtn" hidden>전체 해제</button>
+          </div>
+          <div id="casePickList"></div>
+          <button class="btn primary block" id="pickStartBtn" disabled style="margin-top:14px">케이스를 선택하세요</button>
         </div>
       </div>
 
@@ -639,11 +660,74 @@
   });
   renderCovGrid();
 
-  /* 직접 입력 토글 */
-  $('customToggle').addEventListener('click', ()=>{
-    $('customToggle').classList.toggle('open');
-    $('customBox').classList.toggle('open');
+  /* 케이스 개별 선택 — 원하는 주증상만 골라 연습 */
+  $('casePickToggle').addEventListener('click', ()=>{
+    $('casePickToggle').classList.toggle('open');
+    $('casePickBox').classList.toggle('open');
   });
+
+  const CASESEL_KEY = 'cpxCaseSel';
+  let caseSel = {};   // {"분야||케이스": true}
+  try{ const v = JSON.parse(localStorage.getItem(CASESEL_KEY)); if(v && typeof v === 'object') caseSel = v; }catch(e){}
+  const caseKey = (cat, w) => cat + '||' + w;
+  function persistCaseSel(){ try{ localStorage.setItem(CASESEL_KEY, JSON.stringify(caseSel)); }catch(e){} }
+  function selectedCases(){
+    const arr = [];
+    Object.keys(CASES).forEach(cat => CASES[cat].forEach(w => {
+      if(caseSel[caseKey(cat, w)]) arr.push({w:w, c:cat});
+    }));
+    return arr;
+  }
+  function renderCasePick(){
+    $('casePickList').innerHTML = Object.keys(CASES).map(cat => {
+      const allOn = CASES[cat].every(w => caseSel[caseKey(cat, w)]);
+      return '<div class="pick-group">'
+        + '<div class="pick-group-head">'
+        +   '<span class="pick-gname">'+escapeHtml(cat)+'</span>'
+        +   '<button type="button" class="pick-gall" data-cat="'+escapeHtml(cat)+'">'+(allOn ? '전체 해제' : '전체 선택')+'</button>'
+        + '</div>'
+        + '<div class="pick-chips">'
+        +   CASES[cat].map(w =>
+              '<button type="button" class="case-chip'+(caseSel[caseKey(cat,w)] ? ' on' : '')+'"'
+              + ' data-cat="'+escapeHtml(cat)+'" data-w="'+escapeHtml(w)+'">'+escapeHtml(w)+'</button>'
+            ).join('')
+        + '</div></div>';
+    }).join('');
+    const n = selectedCases().length;
+    $('pickCount').innerHTML = '선택된 케이스 <b>'+n+'</b>개';
+    $('pickClearBtn').hidden = (n === 0);
+    $('pickStartBtn').disabled = (n === 0);
+    $('pickStartBtn').textContent = n === 0 ? '케이스를 선택하세요' : '선택한 '+n+'개 케이스 시작';
+  }
+  $('casePickList').addEventListener('click', e=>{
+    const chip = e.target.closest('.case-chip');
+    if(chip){
+      const k = caseKey(chip.dataset.cat, chip.dataset.w);
+      if(caseSel[k]) delete caseSel[k]; else caseSel[k] = true;
+      persistCaseSel(); renderCasePick();
+      return;
+    }
+    const gall = e.target.closest('.pick-gall');
+    if(gall){
+      const cat = gall.dataset.cat;
+      const allOn = CASES[cat].every(w => caseSel[caseKey(cat, w)]);
+      CASES[cat].forEach(w => {
+        if(allOn) delete caseSel[caseKey(cat, w)];
+        else caseSel[caseKey(cat, w)] = true;
+      });
+      persistCaseSel(); renderCasePick();
+    }
+  });
+  $('pickClearBtn').addEventListener('click', ()=>{
+    caseSel = {};
+    persistCaseSel(); renderCasePick();
+  });
+  $('pickStartBtn').addEventListener('click', ()=>{
+    const items = selectedCases();
+    if(items.length === 0){ alert('케이스를 한 개 이상 선택해 주세요.'); return; }
+    startRound(items);
+  });
+  renderCasePick();
 
   /* ===================== 추첨 로직 ===================== */
   const KEY = 'wordDrawerState';
@@ -705,15 +789,6 @@
     render();
   }
 
-  function parse(text){
-    return text.split(/[\n,]+/).map(s=>s.trim()).filter(s=>s.length>0);
-  }
-
-  function load(){
-    const words = parse($('words').value);
-    if(words.length === 0){ alert('단어를 한 개 이상 입력해 주세요.'); return; }
-    startRound(words.map(w => ({w:w, c:null})));
-  }
   function loadPreset(){
     const sel = selectedCats();
     if(sel.length === 0){ alert('최소 한 개 분야를 선택해 주세요.'); return; }
@@ -872,7 +947,6 @@
     showStage(false);
   }
 
-  $('loadBtn').addEventListener('click', load);
   $('presetBtn').addEventListener('click', loadPreset);
   $('drawBtn').addEventListener('click', draw);
   $('resetBtn').addEventListener('click', ()=>{

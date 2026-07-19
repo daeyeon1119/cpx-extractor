@@ -633,7 +633,6 @@
     if(!s || !s.active || !Array.isArray(s.pool)) return;
     pool = s.pool.map(normItem);
     drawn = Array.isArray(s.drawn) ? s.drawn.map(normItem) : [];
-    usedCats = Array.isArray(s.usedCats) ? s.usedCats : [];
     lastCat = s.lastCat || null;
     mode = s.mode || 'rotate';
     roundTotal = s.roundTotal || (pool.length + drawn.length);
@@ -642,6 +641,8 @@
       pool.concat(drawn).forEach(it=>{ if(it.c) catTotals[it.c] = (catTotals[it.c]||0)+1; });
     }
     setMode(mode, true);
+    // 주의: setMode()가 usedCats를 초기화하므로, 순환 바퀴 상태는 반드시 그 뒤에 복원
+    usedCats = Array.isArray(s.usedCats) ? s.usedCats : [];
     showStage(true);
     if(pool.length === 0){
       const lastItem = drawn.length ? drawn[drawn.length-1] : null;

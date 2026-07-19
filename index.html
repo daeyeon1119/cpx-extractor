@@ -185,8 +185,17 @@
     font-size:12.5px;font-weight:600;color:var(--text-2);
     background:var(--surface-2);border:1px solid var(--border);
     padding:5px 10px;border-radius:999px;
+    cursor:pointer;font-family:inherit;
+    transition:opacity .15s,border-color .15s,background .15s,transform .08s;
   }
+  .cov:hover{border-color:var(--muted)}
+  .cov:active{transform:scale(.95)}
   .cov b{color:var(--primary-strong);font-weight:800;margin-left:3px}
+  .cov.off{opacity:.38;border-style:dashed;background:transparent}
+  .cov.off b{color:var(--muted)}
+  .cov-tools{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px;min-height:18px}
+  .cov-hint{font-size:12px;color:var(--muted)}
+  .cov-all{border:none;background:none;padding:0;font-size:12px;font-weight:700;color:var(--primary-strong);cursor:pointer;text-decoration:underline}
 
   .custom-toggle{
     width:100%;margin-top:14px;border:1px dashed var(--border-strong);background:transparent;
@@ -415,11 +424,15 @@
           <h2>CPX 케이스 뽑기</h2>
           <p>실제 시험처럼 케이스를 무작위로 뽑아 연습하세요. 뽑은 케이스는 다시 나오지 않습니다.</p>
           <div class="cov-grid" id="covGrid"></div>
+          <div class="cov-tools">
+            <span class="cov-hint">분야를 눌러 빼거나 다시 넣을 수 있어요</span>
+            <button type="button" class="cov-all" id="covAllBtn" hidden>모든 분야 선택</button>
+          </div>
         </div>
         <div class="row" style="margin-top:18px">
           <button class="btn primary lg block" id="presetBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>
-            CPX 56 케이스 시작
+            <span id="presetLabel">CPX 56 케이스 시작</span>
           </button>
         </div>
         <button class="custom-toggle" id="customToggle">
@@ -591,12 +604,40 @@
     });
   });
 
-  /* 커버리지 칩 (시작화면) */
-  (function(){
+  /* 분야 선택 칩 (시작화면) — 눌러서 포함/제외 */
+  const CATSEL_KEY = 'cpxCatSel';
+  let catSel = {};   // {분야: false} 만 기록 (기본은 포함)
+  try{ const v = JSON.parse(localStorage.getItem(CATSEL_KEY)); if(v && typeof v === 'object') catSel = v; }catch(e){}
+  function selectedCats(){ return Object.keys(CASES).filter(c => catSel[c] !== false); }
+  function persistCatSel(){ try{ localStorage.setItem(CATSEL_KEY, JSON.stringify(catSel)); }catch(e){} }
+  function renderCovGrid(){
     $('covGrid').innerHTML = Object.keys(CASES).map(c =>
-      '<span class="cov">'+escapeHtml(c)+'<b>'+CASES[c].length+'</b></span>'
+      '<button type="button" class="cov'+(catSel[c]===false?' off':'')+'" data-cat="'+escapeHtml(c)+'">'
+      + escapeHtml(c)+'<b>'+CASES[c].length+'</b></button>'
     ).join('');
-  })();
+    const sel = selectedCats();
+    const total = sel.reduce((s,c)=>s+CASES[c].length,0);
+    const allOn = (sel.length === Object.keys(CASES).length);
+    $('presetLabel').textContent = allOn
+      ? 'CPX 56 케이스 시작'
+      : (sel.length === 0 ? '분야를 선택하세요'
+                          : '선택한 '+sel.length+'개 분야 · '+total+' 케이스 시작');
+    $('presetBtn').disabled = (sel.length === 0);
+    $('covAllBtn').hidden = allOn;
+  }
+  $('covGrid').addEventListener('click', e=>{
+    const b = e.target.closest('.cov'); if(!b) return;
+    const c = b.dataset.cat;
+    catSel[c] = (catSel[c] === false);   // 토글: 꺼져 있으면 켜고, 켜져 있으면 끔
+    persistCatSel();
+    renderCovGrid();
+  });
+  $('covAllBtn').addEventListener('click', ()=>{
+    catSel = {};
+    persistCatSel();
+    renderCovGrid();
+  });
+  renderCovGrid();
 
   /* 직접 입력 토글 */
   $('customToggle').addEventListener('click', ()=>{
@@ -674,8 +715,10 @@
     startRound(words.map(w => ({w:w, c:null})));
   }
   function loadPreset(){
+    const sel = selectedCats();
+    if(sel.length === 0){ alert('최소 한 개 분야를 선택해 주세요.'); return; }
     const arr = [];
-    Object.keys(CASES).forEach(cat => CASES[cat].forEach(w => arr.push({w:w, c:cat})));
+    sel.forEach(cat => CASES[cat].forEach(w => arr.push({w:w, c:cat})));
     startRound(arr);
   }
 

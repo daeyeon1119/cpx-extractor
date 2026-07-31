@@ -292,6 +292,46 @@
   .stage-actions .btn.primary{flex:2}
   .stage-actions .btn.ghost{flex:1}
 
+  /* ============ 교육 대본 ============ */
+  .script-btn{
+    width:100%;margin-top:12px;padding:13px;border-radius:var(--r-md);cursor:pointer;
+    border:1px solid var(--primary);background:var(--primary-softer);color:var(--primary-strong);
+    font-family:inherit;font-size:14.5px;font-weight:700;letter-spacing:-.01em;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:background .15s,transform .08s;
+  }
+  .script-btn:hover{background:var(--primary-soft)}
+  .script-btn:active{transform:translateY(1px)}
+  .script-btn .chev{font-size:11px;transition:transform .2s}
+  .script-btn.open .chev{transform:rotate(180deg)}
+
+  .script-panel{
+    display:none;margin-top:12px;padding:18px 16px;
+    background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);
+  }
+  .script-panel.open{display:block;animation:viewIn .25s ease}
+  .script-doclabel{
+    display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:.04em;
+    color:var(--primary-ink);background:var(--primary);padding:4px 11px;border-radius:999px;margin:18px 0 10px;
+  }
+  .script-doc:first-child .script-doclabel{margin-top:0}
+  .script-h{
+    font-size:14.5px;font-weight:800;color:var(--primary-strong);letter-spacing:-.01em;
+    margin:18px 0 8px;padding-top:12px;border-top:1px solid var(--border);line-height:1.45;
+  }
+  .script-doc > .script-h:first-child{margin-top:0;padding-top:0;border-top:none}
+  .script-q{
+    font-size:14.5px;line-height:1.75;color:var(--text);margin:8px 0;
+    padding:11px 13px;background:var(--surface);border-left:3px solid var(--primary);
+    border-radius:0 var(--r-sm) var(--r-sm) 0;white-space:pre-wrap;word-break:break-word;
+  }
+  .script-p{font-size:13.5px;line-height:1.7;color:var(--text-2);margin:7px 2px;white-space:pre-wrap;word-break:break-word}
+  .script-tablewrap{overflow-x:auto;margin:10px 0;-webkit-overflow-scrolling:touch}
+  .script-table{border-collapse:collapse;width:100%;min-width:340px;font-size:12.5px}
+  .script-table td{border:1px solid var(--border);padding:7px 9px;vertical-align:top;line-height:1.55;color:var(--text-2)}
+  .script-table tr:first-child td{background:var(--surface-3);font-weight:700;color:var(--text)}
+  .script-none{font-size:13.5px;color:var(--muted);text-align:center;padding:8px 0}
+
   /* 분야 현황 */
   .cat-overview{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
   @media(max-width:420px){.cat-overview{grid-template-columns:1fr}}
@@ -483,6 +523,11 @@
           </div>
         </div>
 
+        <button class="script-btn" id="scriptBtn" hidden>
+          <span>📄 교육 대본 보기</span><span class="chev">▾</span>
+        </button>
+        <div class="script-panel" id="scriptPanel"></div>
+
         <div class="stage-actions">
           <button class="btn primary lg" id="drawBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 14h6v6h-6zM14 4l6 6M20 4l-6 6M4 14l6 6M10 14l-6 6"/></svg>
@@ -580,6 +625,7 @@
   </div>
 </div>
 
+<script src="scripts.js"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -729,6 +775,55 @@
   });
   renderCasePick();
 
+  /* ===================== 교육 대본 ===================== */
+  const SCRIPTS = window.CPX_SCRIPTS || {};
+  let scriptCase = null;
+
+  function buildScriptHtml(docs){
+    return docs.map(doc => {
+      let h = '<div class="script-doc">';
+      if(doc.label) h += '<span class="script-doclabel">'+escapeHtml(doc.label)+'</span>';
+      h += doc.blocks.map(b => {
+        const kind = b[0], val = b[1];
+        if(kind === 'h') return '<div class="script-h">'+escapeHtml(val)+'</div>';
+        if(kind === 'q') return '<div class="script-q">'+escapeHtml(val)+'</div>';
+        if(kind === 't'){
+          return '<div class="script-tablewrap"><table class="script-table"><tbody>'
+            + val.map(row => '<tr>'+row.map(c => '<td>'+escapeHtml(c)+'</td>').join('')+'</tr>').join('')
+            + '</tbody></table></div>';
+        }
+        return '<div class="script-p">'+escapeHtml(val)+'</div>';
+      }).join('');
+      return h + '</div>';
+    }).join('');
+  }
+
+  // 케이스가 바뀌면 대본을 닫힌 상태로 새로 준비
+  function setScriptCase(name){
+    scriptCase = name;
+    const docs = name ? SCRIPTS[name] : null;
+    const btn = $('scriptBtn'), panel = $('scriptPanel');
+    panel.classList.remove('open');
+    panel.innerHTML = '';
+    btn.classList.remove('open');
+    btn.querySelector('span').textContent = '📄 교육 대본 보기';
+    btn.hidden = !(docs && docs.length);
+  }
+
+  $('scriptBtn').addEventListener('click', ()=>{
+    const btn = $('scriptBtn'), panel = $('scriptPanel');
+    const opening = !panel.classList.contains('open');
+    if(opening && !panel.innerHTML){
+      const docs = SCRIPTS[scriptCase];
+      panel.innerHTML = docs && docs.length
+        ? buildScriptHtml(docs)
+        : '<div class="script-none">이 케이스의 대본이 없습니다.</div>';
+    }
+    panel.classList.toggle('open', opening);
+    btn.classList.toggle('open', opening);
+    btn.querySelector('span').textContent = opening ? '📄 교육 대본 닫기' : '📄 교육 대본 보기';
+  });
+
   /* ===================== 추첨 로직 ===================== */
   const KEY = 'wordDrawerState';
   let pool = [];        // 남은 케이스 [{w,c}]
@@ -777,12 +872,14 @@
           + '<span class="word">'+escapeHtml(lastItem.w)+'</span>'
           + '<div class="done-note">🎉 모두 완료!</div>';
         $('noteCase').value = lastItem.w;
+        setScriptCase(lastItem.w);
       } else {
         $('result').innerHTML = '<span class="placeholder done">🎉 모든 케이스 완료</span>';
       }
     } else if(s.last){
       $('result').innerHTML = '<span class="placeholder">이어서 뽑으세요 · 직전: '+escapeHtml(s.last)+'</span>';
       $('noteCase').value = s.last;
+      setScriptCase(s.last);
     } else {
       $('result').innerHTML = '<span class="placeholder">버튼을 눌러 케이스를 뽑으세요</span>';
     }
@@ -805,6 +902,7 @@
     items.forEach(it=>{ if(it.c) catTotals[it.c] = (catTotals[it.c]||0)+1; });
     showStage(true);
     $('result').innerHTML = '<span class="placeholder">버튼을 눌러 케이스를 뽑으세요</span>';
+    setScriptCase(null);
     render();
     save();
   }
@@ -860,6 +958,7 @@
       + '<span class="word">'+escapeHtml(item.w)+'</span>'
       + (finished ? '<div class="done-note">🎉 마지막 케이스 · 모두 완료!</div>' : '');
     $('noteCase').value = item.w;
+    setScriptCase(item.w);
     render();
     save();
   }

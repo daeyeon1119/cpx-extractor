@@ -1,8 +1,9 @@
 /* CPX 추출기 서비스 워커 — 오프라인 캐시 */
-const CACHE = 'cpx-extractor-v6';
+const CACHE = 'cpx-extractor-v7';
 const ASSETS = [
   './',
   './index.html',
+  './scripts.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',

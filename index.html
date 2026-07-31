@@ -478,7 +478,7 @@
       <!-- 시작 화면 -->
       <div class="card" id="inputPanel">
         <div class="hero-start">
-          <span class="badge">✚ 표준 임상표현 56</span>
+          <span class="badge">✚ 표준 임상표현 <span id="badgeTotal">56</span></span>
           <h2>CPX 케이스 뽑기</h2>
           <p>실제 시험처럼 케이스를 무작위로 뽑아 연습하세요. 뽑은 케이스는 다시 나오지 않습니다.</p>
           <div class="cov-grid" id="covGrid"></div>
@@ -609,7 +609,7 @@
     </section>
   </main>
 
-  <p class="foot">CPX 표준 임상표현 56 · 비복원 추출 · 분야 순환으로 골고루 연습<br>모든 데이터는 이 기기에만 저장됩니다.</p>
+  <p class="foot">CPX 표준 임상표현 <span id="footTotal">56</span> · 비복원 추출 · 분야 순환으로 골고루 연습<br>모든 데이터는 이 기기에만 저장됩니다.</p>
 </div>
 
 <!-- 설치 방법 안내 모달 -->
@@ -630,12 +630,12 @@
 (function(){
   const $ = id => document.getElementById(id);
 
-  /* ===== CPX 표준 임상표현 56 (분야별) ===== */
+  /* ===== CPX 표준 임상표현 (분야별) ===== */
   const CASES = {
     '소화기': ['급성 복통','소화불량/만성복통','토혈','혈변','구토','변비','설사','황달'],
     '순환기': ['가슴통증','실신','두근거림','고혈압','이상지질혈증'],
     '호흡기': ['기침','콧물/코막힘','객혈','호흡곤란'],
-    '신장/비뇨': ['다뇨증','핍뇨','붉은색 소변','배뇨이상'],
+    '신장/비뇨': ['다뇨증','핍뇨','붉은색 소변','배뇨통','요실금'],
     '전신': ['발열','쉽게 멍이 듦','피로','체중 감소','체중 증가/비만'],
     '관절/근골격/피부': ['관절 통증/부기','목통증','허리통증','피부발진'],
     '정신': ['기분 변화','불안','수면장애'],
@@ -643,6 +643,9 @@
     '산부/여성/소아': ['유방통','유방덩이','질분비물','질출혈','월경이상','월경통','산전진찰','성장/발달지연','예방접종'],
     '상담': ['음주상담','금연상담','물질 오남용','나쁜 소식 전하기','가정폭력','성폭력','자살']
   };
+
+  // 전체 케이스 수 — 목록에서 자동 계산 (표기가 어긋나지 않도록)
+  const TOTAL_CASES = Object.keys(CASES).reduce((s,c)=>s+CASES[c].length, 0);
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -686,7 +689,7 @@
     const total = sel.reduce((s,c)=>s+CASES[c].length,0);
     const allOn = (sel.length === Object.keys(CASES).length);
     $('presetLabel').textContent = allOn
-      ? 'CPX 56 케이스 시작'
+      ? 'CPX ' + TOTAL_CASES + ' 케이스 시작'
       : (sel.length === 0 ? '분야를 선택하세요'
                           : '선택한 '+sel.length+'개 분야 · '+total+' 케이스 시작');
     $('presetBtn').disabled = (sel.length === 0);
@@ -704,6 +707,8 @@
     persistCatSel();
     renderCovGrid();
   });
+  $('badgeTotal').textContent = TOTAL_CASES;
+  $('footTotal').textContent = TOTAL_CASES;
   renderCovGrid();
 
   /* 케이스 개별 선택 — 원하는 주증상만 골라 연습 */
@@ -845,7 +850,12 @@
   }
   function clearSaved(){ try{ localStorage.removeItem(KEY); }catch(e){} }
 
-  function normItem(x){ return (typeof x==='string') ? {w:x, c:null} : x; }
+  function normItem(x){
+    const it = (typeof x==='string') ? {w:x, c:null} : x;
+    // 구버전 저장분: '배뇨이상'이 배뇨통/요실금으로 분리됨
+    if(it.w === '배뇨이상') it.w = '배뇨통';
+    return it;
+  }
 
   function restore(){
     let s;

@@ -292,46 +292,6 @@
   .stage-actions .btn.primary{flex:2}
   .stage-actions .btn.ghost{flex:1}
 
-  /* ============ 교육 대본 ============ */
-  .script-btn{
-    width:100%;margin-top:12px;padding:13px;border-radius:var(--r-md);cursor:pointer;
-    border:1px solid var(--primary);background:var(--primary-softer);color:var(--primary-strong);
-    font-family:inherit;font-size:14.5px;font-weight:700;letter-spacing:-.01em;
-    display:flex;align-items:center;justify-content:center;gap:8px;
-    transition:background .15s,transform .08s;
-  }
-  .script-btn:hover{background:var(--primary-soft)}
-  .script-btn:active{transform:translateY(1px)}
-  .script-btn .chev{font-size:11px;transition:transform .2s}
-  .script-btn.open .chev{transform:rotate(180deg)}
-
-  .script-panel{
-    display:none;margin-top:12px;padding:18px 16px;
-    background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);
-  }
-  .script-panel.open{display:block;animation:viewIn .25s ease}
-  .script-doclabel{
-    display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:.04em;
-    color:var(--primary-ink);background:var(--primary);padding:4px 11px;border-radius:999px;margin:18px 0 10px;
-  }
-  .script-doc:first-child .script-doclabel{margin-top:0}
-  .script-h{
-    font-size:14.5px;font-weight:800;color:var(--primary-strong);letter-spacing:-.01em;
-    margin:18px 0 8px;padding-top:12px;border-top:1px solid var(--border);line-height:1.45;
-  }
-  .script-doc > .script-h:first-child{margin-top:0;padding-top:0;border-top:none}
-  .script-q{
-    font-size:14.5px;line-height:1.75;color:var(--text);margin:8px 0;
-    padding:11px 13px;background:var(--surface);border-left:3px solid var(--primary);
-    border-radius:0 var(--r-sm) var(--r-sm) 0;white-space:pre-wrap;word-break:break-word;
-  }
-  .script-p{font-size:13.5px;line-height:1.7;color:var(--text-2);margin:7px 2px;white-space:pre-wrap;word-break:break-word}
-  .script-tablewrap{overflow-x:auto;margin:10px 0;-webkit-overflow-scrolling:touch}
-  .script-table{border-collapse:collapse;width:100%;min-width:340px;font-size:12.5px}
-  .script-table td{border:1px solid var(--border);padding:7px 9px;vertical-align:top;line-height:1.55;color:var(--text-2)}
-  .script-table tr:first-child td{background:var(--surface-3);font-weight:700;color:var(--text)}
-  .script-none{font-size:13.5px;color:var(--muted);text-align:center;padding:8px 0}
-
   /* 분야 현황 */
   .cat-overview{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
   @media(max-width:420px){.cat-overview{grid-template-columns:1fr}}
@@ -478,7 +438,7 @@
       <!-- 시작 화면 -->
       <div class="card" id="inputPanel">
         <div class="hero-start">
-          <span class="badge">✚ 표준 임상표현 <span id="badgeTotal">57</span></span>
+          <span class="badge">✚ 표준 임상표현 <span id="badgeTotal">56</span></span>
           <h2>CPX 케이스 뽑기</h2>
           <p>실제 시험처럼 케이스를 무작위로 뽑아 연습하세요. 뽑은 케이스는 다시 나오지 않습니다.</p>
           <div class="cov-grid" id="covGrid"></div>
@@ -490,7 +450,7 @@
         <div class="row" style="margin-top:18px">
           <button class="btn primary lg block" id="presetBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>
-            <span id="presetLabel">CPX 57 케이스 시작</span>
+            <span id="presetLabel">CPX 56 케이스 시작</span>
           </button>
         </div>
         <button class="custom-toggle" id="casePickToggle">
@@ -522,11 +482,6 @@
             <span class="placeholder">버튼을 눌러 케이스를 뽑으세요</span>
           </div>
         </div>
-
-        <button class="script-btn" id="scriptBtn" hidden>
-          <span>📄 교육 대본 보기</span><span class="chev">▾</span>
-        </button>
-        <div class="script-panel" id="scriptPanel"></div>
 
         <div class="stage-actions">
           <button class="btn primary lg" id="drawBtn">
@@ -609,7 +564,7 @@
     </section>
   </main>
 
-  <p class="foot">CPX 표준 임상표현 <span id="footTotal">57</span> · 비복원 추출 · 분야 순환으로 골고루 연습<br>모든 데이터는 이 기기에만 저장됩니다.</p>
+  <p class="foot">CPX 표준 임상표현 <span id="footTotal">56</span> · 비복원 추출 · 분야 순환으로 골고루 연습<br>모든 데이터는 이 기기에만 저장됩니다.</p>
 </div>
 
 <!-- 설치 방법 안내 모달 -->
@@ -625,7 +580,6 @@
   </div>
 </div>
 
-<script src="scripts.js?v=12"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
@@ -635,17 +589,27 @@
     '소화기': ['급성 복통','소화불량/만성복통','토혈','혈변','구토','변비','설사','황달'],
     '순환기': ['가슴통증','실신','두근거림','고혈압','이상지질혈증'],
     '호흡기': ['기침','콧물/코막힘','객혈','호흡곤란'],
-    '신장/비뇨': ['다뇨증','핍뇨','붉은색 소변','배뇨통','요실금'],
+    '신장/비뇨': ['다뇨증','핍뇨','붉은색 소변','배뇨이상','소변찔금증'],
     '전신': ['발열','쉽게 멍이 듦','피로','체중 감소','체중 증가/비만'],
     '관절/근골격/피부': ['관절 통증/부기','목통증','허리통증','피부발진'],
     '정신': ['기분 변화','불안','수면장애'],
     '신경': ['기억력 저하','어지럼','두통','경련','근력/감각이상','의식장애','떨림/운동이상'],
-    '산부/여성/소아': ['유방통','유방덩이','질분비물','질출혈','월경이상','월경통','산전진찰','성장/발달지연','예방접종'],
+    '산부/여성/소아': ['유방통/유방덩이','질분비물','질출혈','월경이상','월경통','산전진찰','성장/발달지연','예방접종'],
     '상담': ['음주상담','금연상담','물질 오남용','나쁜 소식 전하기','가정폭력','성폭력','자살']
   };
 
   // 전체 케이스 수 — 목록에서 자동 계산 (표기가 어긋나지 않도록)
   const TOTAL_CASES = Object.keys(CASES).reduce((s,c)=>s+CASES[c].length, 0);
+
+  // 케이스 이름 변경 이력 — 예전에 저장된 진행 상태·선택을 현재 이름으로 옮긴다
+  const RENAMED = {
+    '배뇨통': '배뇨이상',
+    '요실금': '소변찔금증',
+    '유방통': '유방통/유방덩이',
+    '유방덩이': '유방통/유방덩이'
+  };
+  // 두 케이스가 하나로 합쳐진 이름 (예전 저장분에 둘 다 있으면 하나만 남긴다)
+  const MERGED = new Set(['유방통/유방덩이']);
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -722,6 +686,15 @@
   try{ const v = JSON.parse(localStorage.getItem(CASESEL_KEY)); if(v && typeof v === 'object') caseSel = v; }catch(e){}
   const caseKey = (cat, w) => cat + '||' + w;
   function persistCaseSel(){ try{ localStorage.setItem(CASESEL_KEY, JSON.stringify(caseSel)); }catch(e){} }
+  (function migrateCaseSel(){
+    let changed = false;
+    Object.keys(caseSel).forEach(k => {
+      const i = k.indexOf('||'); if(i < 0) return;
+      const cat = k.slice(0, i), w = k.slice(i + 2);
+      if(RENAMED[w]){ delete caseSel[k]; caseSel[caseKey(cat, RENAMED[w])] = true; changed = true; }
+    });
+    if(changed) persistCaseSel();
+  })();
   function selectedCases(){
     const arr = [];
     Object.keys(CASES).forEach(cat => CASES[cat].forEach(w => {
@@ -780,55 +753,6 @@
   });
   renderCasePick();
 
-  /* ===================== 교육 대본 ===================== */
-  const SCRIPTS = window.CPX_SCRIPTS || {};
-  let scriptCase = null;
-
-  function buildScriptHtml(docs){
-    return docs.map(doc => {
-      let h = '<div class="script-doc">';
-      if(doc.label) h += '<span class="script-doclabel">'+escapeHtml(doc.label)+'</span>';
-      h += doc.blocks.map(b => {
-        const kind = b[0], val = b[1];
-        if(kind === 'h') return '<div class="script-h">'+escapeHtml(val)+'</div>';
-        if(kind === 'q') return '<div class="script-q">'+escapeHtml(val)+'</div>';
-        if(kind === 't'){
-          return '<div class="script-tablewrap"><table class="script-table"><tbody>'
-            + val.map(row => '<tr>'+row.map(c => '<td>'+escapeHtml(c)+'</td>').join('')+'</tr>').join('')
-            + '</tbody></table></div>';
-        }
-        return '<div class="script-p">'+escapeHtml(val)+'</div>';
-      }).join('');
-      return h + '</div>';
-    }).join('');
-  }
-
-  // 케이스가 바뀌면 대본을 닫힌 상태로 새로 준비
-  function setScriptCase(name){
-    scriptCase = name;
-    const docs = name ? SCRIPTS[name] : null;
-    const btn = $('scriptBtn'), panel = $('scriptPanel');
-    panel.classList.remove('open');
-    panel.innerHTML = '';
-    btn.classList.remove('open');
-    btn.querySelector('span').textContent = '📄 교육 대본 보기';
-    btn.hidden = !(docs && docs.length);
-  }
-
-  $('scriptBtn').addEventListener('click', ()=>{
-    const btn = $('scriptBtn'), panel = $('scriptPanel');
-    const opening = !panel.classList.contains('open');
-    if(opening && !panel.innerHTML){
-      const docs = SCRIPTS[scriptCase];
-      panel.innerHTML = docs && docs.length
-        ? buildScriptHtml(docs)
-        : '<div class="script-none">이 케이스의 대본이 없습니다.</div>';
-    }
-    panel.classList.toggle('open', opening);
-    btn.classList.toggle('open', opening);
-    btn.querySelector('span').textContent = opening ? '📄 교육 대본 닫기' : '📄 교육 대본 보기';
-  });
-
   /* ===================== 추첨 로직 ===================== */
   const KEY = 'wordDrawerState';
   let pool = [];        // 남은 케이스 [{w,c}]
@@ -852,9 +776,26 @@
 
   function normItem(x){
     const it = (typeof x==='string') ? {w:x, c:null} : x;
-    // 구버전 저장분: '배뇨이상'이 배뇨통/요실금으로 분리됨
-    if(it.w === '배뇨이상') it.w = '배뇨통';
+    if(RENAMED[it.w]) it.w = RENAMED[it.w];
     return it;
+  }
+  // 합쳐진 케이스가 예전 저장분에 두 번 남아 있으면 하나만 두고, 총계도 그만큼 줄인다
+  function dedupeMerged(){
+    const seen = new Set();
+    let removed = 0;
+    const keep = it => {
+      if(!MERGED.has(it.w)) return true;
+      const k = it.c + '||' + it.w;
+      if(seen.has(k)){
+        removed++;
+        if(it.c && catTotals[it.c]) catTotals[it.c]--;
+        return false;
+      }
+      seen.add(k); return true;
+    };
+    drawn = drawn.filter(keep);
+    pool = pool.filter(keep);
+    roundTotal = Math.max(0, roundTotal - removed);
   }
 
   function restore(){
@@ -870,6 +811,8 @@
     if(Object.keys(catTotals).length === 0){
       pool.concat(drawn).forEach(it=>{ if(it.c) catTotals[it.c] = (catTotals[it.c]||0)+1; });
     }
+    dedupeMerged();
+    const last = s.last ? (RENAMED[s.last] || s.last) : null;
     setMode(mode, true);
     // 주의: setMode()가 usedCats를 초기화하므로, 순환 바퀴 상태는 반드시 그 뒤에 복원
     usedCats = Array.isArray(s.usedCats) ? s.usedCats : [];
@@ -882,14 +825,12 @@
           + '<span class="word">'+escapeHtml(lastItem.w)+'</span>'
           + '<div class="done-note">🎉 모두 완료!</div>';
         $('noteCase').value = lastItem.w;
-        setScriptCase(lastItem.w);
       } else {
         $('result').innerHTML = '<span class="placeholder done">🎉 모든 케이스 완료</span>';
       }
-    } else if(s.last){
-      $('result').innerHTML = '<span class="placeholder">이어서 뽑으세요 · 직전: '+escapeHtml(s.last)+'</span>';
-      $('noteCase').value = s.last;
-      setScriptCase(s.last);
+    } else if(last){
+      $('result').innerHTML = '<span class="placeholder">이어서 뽑으세요 · 직전: '+escapeHtml(last)+'</span>';
+      $('noteCase').value = last;
     } else {
       $('result').innerHTML = '<span class="placeholder">버튼을 눌러 케이스를 뽑으세요</span>';
     }
@@ -912,7 +853,6 @@
     items.forEach(it=>{ if(it.c) catTotals[it.c] = (catTotals[it.c]||0)+1; });
     showStage(true);
     $('result').innerHTML = '<span class="placeholder">버튼을 눌러 케이스를 뽑으세요</span>';
-    setScriptCase(null);
     render();
     save();
   }
@@ -968,7 +908,6 @@
       + '<span class="word">'+escapeHtml(item.w)+'</span>'
       + (finished ? '<div class="done-note">🎉 마지막 케이스 · 모두 완료!</div>' : '');
     $('noteCase').value = item.w;
-    setScriptCase(item.w);
     render();
     save();
   }

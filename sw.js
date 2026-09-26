@@ -1,10 +1,8 @@
 /* CPX 추출기 서비스 워커 — 오프라인 캐시 */
-const CACHE = 'cpx-extractor-v12';
-const SCRIPTS = './scripts.js?v=12';   // index.html의 <script src>와 반드시 동일하게 유지
+const CACHE = 'cpx-extractor-v13';
 const ASSETS = [
   './',
   './index.html',
-  SCRIPTS,
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -31,7 +29,7 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
-  // HTML 문서는 네트워크 우선 — 옛 화면이 계속 남아 대본과 어긋나는 것을 방지.
+  // HTML 문서는 네트워크 우선 — 옛 화면이 캐시에 눌러앉지 않도록.
   // 오프라인이면 캐시된 화면으로 대체한다.
   if (req.mode === 'navigate') {
     e.respondWith(

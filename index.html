@@ -35,7 +35,6 @@
     --shadow-sm:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.05);
     --shadow-md:0 4px 12px rgba(16,24,40,.07),0 2px 6px rgba(16,24,40,.05);
     --shadow-lg:0 18px 40px -12px rgba(16,24,40,.22);
-    --ring:0 0 0 3px rgba(13,148,136,.20);
     --r-sm:9px; --r-md:14px; --r-lg:20px; --r-xl:26px;
   }
   html[data-theme="dark"]{
@@ -59,7 +58,6 @@
     --shadow-sm:0 1px 2px rgba(0,0,0,.4);
     --shadow-md:0 6px 16px rgba(0,0,0,.4);
     --shadow-lg:0 20px 44px -14px rgba(0,0,0,.6);
-    --ring:0 0 0 3px rgba(45,212,191,.25);
   }
 
   *{box-sizing:border-box;margin:0;padding:0}
@@ -106,31 +104,7 @@
   .icon-btn:hover{background:var(--surface-2);border-color:var(--border-strong)}
   .icon-btn:active{transform:scale(.94)}
 
-  /* ============ 탭 ============ */
-  .tabs{
-    position:sticky;top:70px;z-index:19;
-    display:flex;gap:4px;padding:5px;margin-bottom:18px;
-    background:var(--surface-2);border:1px solid var(--border);
-    border-radius:var(--r-md);box-shadow:var(--shadow-sm);
-  }
-  .tab{
-    flex:1;border:none;background:transparent;cursor:pointer;
-    font-family:inherit;font-size:14px;font-weight:700;color:var(--muted);
-    padding:10px 6px;border-radius:10px;letter-spacing:-.01em;
-    display:flex;align-items:center;justify-content:center;gap:6px;
-    transition:color .15s,background .15s,box-shadow .15s;
-  }
-  .tab:hover{color:var(--text-2)}
-  .tab.active{background:var(--surface);color:var(--primary-strong);box-shadow:var(--shadow-sm)}
-  .tab .dot{
-    min-width:18px;height:18px;padding:0 5px;border-radius:999px;font-size:11px;font-weight:800;
-    background:var(--primary);color:var(--primary-ink);display:none;place-items:center;line-height:18px;
-  }
-  .tab.active .dot,.tab .dot.show{display:inline-grid}
-
-  /* ============ 뷰 전환 ============ */
-  .view{display:none;animation:viewIn .28s ease}
-  .view.active{display:block}
+  /* ============ 공용 애니메이션 ============ */
   @keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
   /* ============ 카드 ============ */
@@ -226,15 +200,6 @@
   .custom-toggle.open .chev{transform:rotate(180deg)}
   .custom-box{margin-top:12px;display:none}
   .custom-box.open{display:block;animation:viewIn .25s ease}
-  textarea{
-    width:100%;min-height:120px;resize:vertical;
-    border:1px solid var(--border-strong);border-radius:var(--r-sm);
-    background:var(--surface-2);padding:13px;color:var(--text);
-    font-family:inherit;font-size:15px;line-height:1.7;
-    transition:border-color .15s,box-shadow .15s,background .15s;
-  }
-  textarea:focus{outline:none;border-color:var(--primary);box-shadow:var(--ring);background:var(--surface)}
-  .hint{font-size:12.5px;color:var(--muted);margin:8px 2px 0}
 
   /* ============ 추첨 스테이지 ============ */
   .stage-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
@@ -319,70 +284,6 @@
   .hist-c{font-size:12px;color:var(--muted);font-weight:600;background:var(--surface-2);padding:3px 9px;border-radius:999px;border:1px solid var(--border)}
   .hist-empty{color:var(--muted);font-size:13.5px;font-style:normal;text-align:center;padding:10px 0}
 
-  /* ============ 피드백 메모 ============ */
-  .note-form input[type=text]{
-    width:100%;padding:12px 13px;font-family:inherit;font-size:15px;
-    border:1px solid var(--border-strong);border-radius:var(--r-sm);
-    background:var(--surface-2);color:var(--text);margin-bottom:9px;
-    transition:border-color .15s,box-shadow .15s,background .15s;
-  }
-  .note-form input:focus{outline:none;border-color:var(--primary);box-shadow:var(--ring);background:var(--surface)}
-  .note-form textarea{min-height:70px;margin-bottom:9px}
-  .note-list-head{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 10px;font-size:13px;color:var(--text-2);font-weight:700}
-  .link-btn{border:none;background:none;padding:0;font-size:12.5px;color:var(--danger);cursor:pointer;font-weight:700}
-  .link-btn:hover{text-decoration:underline}
-  .note-list{list-style:none}
-  .note-group{border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:9px;background:var(--surface-2);overflow:hidden}
-  .group-head{
-    width:100%;display:flex;align-items:center;gap:10px;border:none;background:none;
-    padding:13px 14px;cursor:pointer;font-family:inherit;text-align:left;transition:background .15s;
-  }
-  .group-head:hover{background:var(--surface-3)}
-  .group-head .chev{font-size:10px;color:var(--muted);transition:transform .18s}
-  .group-head.open .chev{transform:rotate(90deg)}
-  .group-head .gname{font-weight:700;font-size:15px;flex:1;color:var(--text)}
-  .group-head .gcount{font-size:11.5px;font-weight:800;color:var(--primary-ink);background:var(--primary);border-radius:999px;padding:2px 10px}
-  .group-body{padding:2px 14px 6px;border-top:1px solid var(--border)}
-  .note-row{position:relative;padding:11px 30px 11px 0;border-bottom:1px dashed var(--border)}
-  .note-row:last-child{border-bottom:none}
-  .note-meta{display:flex;gap:8px;align-items:baseline;font-size:12px}
-  .note-meta .round{color:var(--primary-strong);font-weight:800}
-  .note-meta .nt{color:var(--muted)}
-  .note-row .nbody{font-size:14.5px;margin-top:5px;white-space:pre-wrap;word-break:break-word;color:var(--text)}
-  .note-row .del{position:absolute;top:9px;right:-4px;border:none;background:none;font-size:19px;line-height:1;color:var(--muted);cursor:pointer;padding:3px 6px;border-radius:8px;transition:color .15s,background .15s}
-  .note-row .del:hover{color:var(--danger);background:var(--surface-3)}
-  .note-empty{color:var(--muted);font-size:13.5px;text-align:center;padding:16px 0}
-
-  /* ============ 타이머 ============ */
-  .timer-wrap{display:flex;flex-direction:column;align-items:center}
-  .ring-box{position:relative;width:230px;height:230px;margin:6px 0 18px}
-  .ring{width:100%;height:100%;transform:rotate(-90deg)}
-  .ring circle{fill:none;stroke-width:11;stroke-linecap:round}
-  .ring .ring-bg{stroke:var(--surface-3)}
-  .ring .ring-fg{stroke:var(--primary);transition:stroke-dashoffset .35s linear,stroke .3s}
-  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-  .timer-num{font-size:52px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.01em;line-height:1;color:var(--text)}
-  .timer-state{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:8px}
-  .ringing .ring-fg{stroke:var(--danger)}
-  .ringing .timer-num{color:var(--danger);animation:flash .6s steps(1) infinite}
-  @keyframes flash{50%{opacity:.3}}
-
-  .timer-set{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
-  .preset{
-    padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer;
-    border:1px solid var(--border-strong);border-radius:999px;background:var(--surface);color:var(--text-2);
-    transition:background .15s,color .15s,border-color .15s,transform .08s;
-  }
-  .preset:hover{border-color:var(--muted)}
-  .preset:active{transform:scale(.96)}
-  .preset.active{background:var(--primary);border-color:var(--primary);color:var(--primary-ink);box-shadow:var(--shadow-sm)}
-  .custom-min{display:flex;align-items:center;gap:7px}
-  .custom-min input{width:88px;padding:9px 11px;font-family:inherit;font-size:14px;border:1px solid var(--border-strong);border-radius:999px;background:var(--surface);color:var(--text);text-align:center}
-  .custom-min input:focus{outline:none;border-color:var(--primary);box-shadow:var(--ring)}
-  .custom-min .u{font-size:14px;color:var(--muted);font-weight:600}
-  .timer-actions{display:flex;gap:10px;width:100%;max-width:320px}
-  .timer-actions .btn{flex:1}
-
   .foot{margin:22px 0 6px;font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
 
   /* ============ 설치 안내 모달 ============ */
@@ -425,16 +326,8 @@
     <button class="icon-btn" id="themeBtn" title="테마 전환" aria-label="테마 전환">🌙</button>
   </header>
 
-  <!-- 탭 -->
-  <nav class="tabs" role="tablist">
-    <button class="tab active" data-tab="draw" role="tab">추첨</button>
-    <button class="tab" data-tab="notes" role="tab">피드백<span class="dot" id="tabNoteDot">0</span></button>
-    <button class="tab" data-tab="timer" role="tab">타이머</button>
-  </nav>
-
   <main>
-    <!-- ========== 추첨 탭 ========== -->
-    <section class="view active" id="view-draw" role="tabpanel">
+    <section id="view-draw">
       <!-- 시작 화면 -->
       <div class="card" id="inputPanel">
         <div class="hero-start">
@@ -510,58 +403,6 @@
       </div>
     </section>
 
-    <!-- ========== 피드백 탭 ========== -->
-    <section class="view" id="view-notes" role="tabpanel">
-      <div class="card">
-        <div class="card-title"><span class="ico">✎</span> 자가 피드백 메모</div>
-        <div class="note-form">
-          <input type="text" id="noteCase" placeholder="케이스 (뽑으면 자동 입력됩니다)">
-          <textarea id="noteText" placeholder="예) 약물력 빠뜨림 / 감별진단 설명 부족 / 라포 형성 좋았음"></textarea>
-          <button class="btn primary block" id="noteSaveBtn">메모 저장</button>
-        </div>
-        <div class="note-list-head">
-          <span id="noteCount">저장된 메모 0개</span>
-          <button id="noteClearBtn" class="link-btn" hidden>전체 삭제</button>
-        </div>
-        <ul class="note-list" id="noteList"></ul>
-      </div>
-    </section>
-
-    <!-- ========== 타이머 탭 ========== -->
-    <section class="view" id="view-timer" role="tabpanel">
-      <div class="card">
-        <div class="card-title"><span class="ico">◷</span> 타이머</div>
-        <div class="timer-wrap">
-          <div class="ring-box" id="ringBox">
-            <svg class="ring" viewBox="0 0 120 120">
-              <circle class="ring-bg" cx="60" cy="60" r="54"/>
-              <circle class="ring-fg" id="ringFg" cx="60" cy="60" r="54"/>
-            </svg>
-            <div class="ring-center">
-              <div class="timer-num" id="timerDisplay">00:00</div>
-              <div class="timer-state" id="timerState">대기</div>
-            </div>
-          </div>
-          <div class="timer-set">
-            <button class="preset" data-min="1">1분</button>
-            <button class="preset" data-min="3">3분</button>
-            <button class="preset" data-min="5">5분</button>
-            <button class="preset" data-min="10">10분</button>
-          </div>
-          <div class="timer-set" style="margin-bottom:18px">
-            <div class="custom-min">
-              <input type="number" id="minInput" min="0" max="999" placeholder="직접">
-              <span class="u">분</span>
-              <button class="btn" id="setBtn" style="padding:9px 16px;border-radius:999px">설정</button>
-            </div>
-          </div>
-          <div class="timer-actions">
-            <button class="btn primary lg" id="startBtn" disabled>시작</button>
-            <button class="btn ghost lg" id="timerResetBtn" disabled>정지</button>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
 
   <p class="foot">CPX 표준 임상표현 <span id="footTotal">56</span> · 비복원 추출 · 분야 순환으로 골고루 연습<br>모든 데이터는 이 기기에만 저장됩니다.</p>
@@ -621,21 +462,16 @@
     document.documentElement.setAttribute('data-theme',t);
     $('themeBtn').textContent = t==='dark' ? '☀️' : '🌙';
   }
-  let theme = localStorage.getItem(THEME_KEY) || (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  let theme = null;
+  try{ theme = localStorage.getItem(THEME_KEY); }catch(e){}   // 저장소가 막혀도 앱은 떠야 한다
+  if(theme !== 'dark' && theme !== 'light'){
+    theme = (window.matchMedia && matchMedia('(prefers-color-scheme:dark)').matches) ? 'dark' : 'light';
+  }
   applyTheme(theme);
   $('themeBtn').addEventListener('click', ()=>{
     theme = theme==='dark' ? 'light' : 'dark';
     try{ localStorage.setItem(THEME_KEY,theme); }catch(e){}
     applyTheme(theme);
-  });
-
-  /* ===== 탭 ===== */
-  document.querySelectorAll('.tab').forEach(t=>{
-    t.addEventListener('click', ()=>{
-      document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x===t));
-      const name = t.dataset.tab;
-      document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+name));
-    });
   });
 
   /* 분야 선택 칩 (시작화면) — 눌러서 포함/제외 */
@@ -759,15 +595,15 @@
   let drawn = [];       // 뽑힌 케이스 [{w,c}]
   let usedCats = [];    // 분야 순환: 이번 바퀴에 뽑은 분야
   let lastCat = null;
-  let mode = 'rotate';  // rotate | once | random
-  let roundTotal = 0;
-  let catTotals = {};   // {분야: 시작 개수}
+  const MODES = ['rotate', 'once', 'random'];
+  let mode = 'rotate';
+  let catTotals = {};   // 이번 라운드에 포함된 분야 (키 = 분야 목록)
 
   function save(){
     try{
       localStorage.setItem(KEY, JSON.stringify({
         active: !$('drawPanel').hidden,
-        pool, drawn, usedCats, lastCat, mode, roundTotal, catTotals,
+        pool, drawn, usedCats, lastCat, mode, catTotals,
         last: drawn.length ? drawn[drawn.length-1].w : null
       }));
     }catch(e){}
@@ -779,23 +615,17 @@
     if(RENAMED[it.w]) it.w = RENAMED[it.w];
     return it;
   }
-  // 합쳐진 케이스가 예전 저장분에 두 번 남아 있으면 하나만 두고, 총계도 그만큼 줄인다
+  // 합쳐진 케이스가 예전 저장분에 두 번 남아 있으면 하나만 둔다
   function dedupeMerged(){
     const seen = new Set();
-    let removed = 0;
     const keep = it => {
       if(!MERGED.has(it.w)) return true;
       const k = it.c + '||' + it.w;
-      if(seen.has(k)){
-        removed++;
-        if(it.c && catTotals[it.c]) catTotals[it.c]--;
-        return false;
-      }
+      if(seen.has(k)) return false;
       seen.add(k); return true;
     };
-    drawn = drawn.filter(keep);
+    drawn = drawn.filter(keep);   // 이미 뽑은 쪽을 먼저 남겨, 남은 쪽의 중복이 빠지게 한다
     pool = pool.filter(keep);
-    roundTotal = Math.max(0, roundTotal - removed);
   }
 
   function restore(){
@@ -805,8 +635,7 @@
     pool = s.pool.map(normItem);
     drawn = Array.isArray(s.drawn) ? s.drawn.map(normItem) : [];
     lastCat = s.lastCat || null;
-    mode = s.mode || 'rotate';
-    roundTotal = s.roundTotal || (pool.length + drawn.length);
+    mode = MODES.indexOf(s.mode) >= 0 ? s.mode : 'rotate';
     catTotals = s.catTotals && Object.keys(s.catTotals).length ? s.catTotals : {};
     if(Object.keys(catTotals).length === 0){
       pool.concat(drawn).forEach(it=>{ if(it.c) catTotals[it.c] = (catTotals[it.c]||0)+1; });
@@ -824,13 +653,11 @@
           (lastItem.c ? '<span class="cat-badge">'+escapeHtml(lastItem.c)+'</span>' : '')
           + '<span class="word">'+escapeHtml(lastItem.w)+'</span>'
           + '<div class="done-note">🎉 모두 완료!</div>';
-        $('noteCase').value = lastItem.w;
       } else {
         $('result').innerHTML = '<span class="placeholder done">🎉 모든 케이스 완료</span>';
       }
     } else if(last){
       $('result').innerHTML = '<span class="placeholder">이어서 뽑으세요 · 직전: '+escapeHtml(last)+'</span>';
-      $('noteCase').value = last;
     } else {
       $('result').innerHTML = '<span class="placeholder">버튼을 눌러 케이스를 뽑으세요</span>';
     }
@@ -848,7 +675,6 @@
   function startRound(items){
     pool = items.slice();
     drawn = []; usedCats = []; lastCat = null;
-    roundTotal = items.length;
     catTotals = {};
     items.forEach(it=>{ if(it.c) catTotals[it.c] = (catTotals[it.c]||0)+1; });
     showStage(true);
@@ -878,17 +704,15 @@
     }
     if(mode === 'rotate'){
       let avail = cats.filter(c => usedCats.indexOf(c) === -1);
-      if(avail.length === 0){
-        usedCats = [];
-        avail = cats.slice();
-        if(avail.length > 1 && lastCat) avail = avail.filter(c => c !== lastCat);
-      }
+      if(avail.length === 0){ usedCats = []; avail = cats.slice(); }
+      // 새 바퀴의 첫 뽑기는 직전 분야를 피한다 — 바퀴 경계뿐 아니라 모드 전환 직후도 포함
+      if(usedCats.length === 0 && avail.length > 1 && lastCat) avail = avail.filter(c => c !== lastCat);
       const cat = avail[Math.floor(Math.random()*avail.length)];
       const idxs = pool.map((it,i)=> it.c===cat ? i : -1).filter(i=>i>=0);
       usedCats.push(cat);
       return { idx: idxs[Math.floor(Math.random()*idxs.length)], bulkCat: null };
     }
-    // once
+    // once: 분야 하나를 고르고, 그 분야의 나머지는 이번 라운드에서 뺀다
     const cat = cats[Math.floor(Math.random()*cats.length)];
     const idxs = pool.map((it,i)=> it.c===cat ? i : -1).filter(i=>i>=0);
     return { idx: idxs[Math.floor(Math.random()*idxs.length)], bulkCat: cat };
@@ -907,7 +731,6 @@
       (item.c ? '<span class="cat-badge">'+escapeHtml(item.c)+'</span>' : '')
       + '<span class="word">'+escapeHtml(item.w)+'</span>'
       + (finished ? '<div class="done-note">🎉 마지막 케이스 · 모두 완료!</div>' : '');
-    $('noteCase').value = item.w;
     render();
     save();
   }
@@ -937,7 +760,7 @@
       done = total - uniqueCats().length;          // 뽑은 분야 수
       unit = ' 분야';
     } else {
-      total = roundTotal || (pool.length + drawn.length);
+      total = drawn.length + pool.length;   // 끝까지 뽑았을 때의 총 추출 수
       done = drawn.length;
     }
     $('progDone').textContent = done;
@@ -948,13 +771,14 @@
   function renderCats(){
     const cats = Object.keys(catTotals);
     if(cats.length === 0){ return; }
-    const remByCat = {};
+    const remByCat = {}, drawnByCat = {};
     pool.forEach(it=>{ if(it.c) remByCat[it.c] = (remByCat[it.c]||0)+1; });
+    drawn.forEach(it=>{ if(it.c) drawnByCat[it.c] = (drawnByCat[it.c]||0)+1; });
     const onceMode = (mode === 'once');
     $('catOverview').innerHTML = cats.map(c=>{
-      const total = catTotals[c];
       const rem = remByCat[c] || 0;
-      const done = total - rem;
+      const done = drawnByCat[c] || 0;
+      const total = done + rem;
       const consumed = (rem === 0);
       const fracTxt = onceMode ? (consumed ? '뽑음' : '대기') : (done + '/' + total);
       const pct = onceMode ? (consumed ? 100 : 0) : (total ? (done/total*100) : 0);
@@ -981,16 +805,19 @@
   }
 
   function setMode(m, silent){
+    if(MODES.indexOf(m) < 0) m = 'rotate';
+    const changed = (m !== mode);
     mode = m;
     document.querySelectorAll('#modeSelect button').forEach(b=>
       b.classList.toggle('active', b.dataset.mode === m));
-    usedCats = [];
+    if(!changed) return;   // 켜져 있는 모드를 다시 눌러도 진행 중인 순환 바퀴는 그대로
+    usedCats = [];         // 다른 모드로 바뀌면 새 바퀴부터
     if(!silent){ render(); save(); }
   }
 
   function reset(){
     pool = []; drawn = []; usedCats = []; lastCat = null;
-    roundTotal = 0; catTotals = {};
+    catTotals = {};
     clearSaved();
     showStage(false);
   }
@@ -1004,224 +831,20 @@
   document.querySelectorAll('#modeSelect button').forEach(b=>
     b.addEventListener('click', ()=> setMode(b.dataset.mode)));
 
-  // 스페이스바로 뽑기 (입력 중이 아닐 때)
+  // 스페이스바로 뽑기 — 한 번 누를 때 한 개만 (꾹 누를 때의 키 반복은 무시)
   document.addEventListener('keydown', e=>{
     if(e.code !== 'Space') return;
     const tag = (e.target.tagName || '').toLowerCase();
     if(tag === 'input' || tag === 'textarea' || tag === 'button') return;
     if($('drawPanel').hidden) return;
-    if(!$('view-draw').classList.contains('active')) return;
+    const help = document.getElementById('installHelp');
+    if(help && !help.hidden) return;   // 설치 안내 창이 떠 있으면 뒤에서 뽑지 않는다
     e.preventDefault();
+    if(e.repeat) return;
     draw();
   });
 
-  /* ===================== 타이머 ===================== */
-  let totalSec = 0, remainSec = 0, tickId = null, audioCtx = null;
-  const R = 54, C = 2 * Math.PI * R;
-  $('ringFg').style.strokeDasharray = C;
-  $('ringFg').style.strokeDashoffset = C;
-
-  function fmt(s){
-    const m = Math.floor(s/60), ss = s%60;
-    return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
-  }
-  function showTime(){
-    $('timerDisplay').textContent = fmt(remainSec);
-    const frac = totalSec ? remainSec/totalSec : 0;
-    $('ringFg').style.strokeDashoffset = C * (1 - frac);
-  }
-  function setState(t){ $('timerState').textContent = t; }
-
-  function setTimer(min){
-    stopRing();
-    totalSec = Math.round(min*60);
-    remainSec = totalSec;
-    if(tickId){ clearInterval(tickId); tickId = null; }
-    $('startBtn').textContent = '시작';
-    $('startBtn').disabled = (totalSec === 0);
-    $('timerResetBtn').disabled = (totalSec === 0);
-    setState(totalSec ? '준비됨' : '대기');
-    showTime();
-  }
-
-  function startPause(){
-    if(totalSec === 0) return;
-    if(tickId){
-      clearInterval(tickId); tickId = null;
-      $('startBtn').textContent = '계속';
-      setState('일시정지');
-      return;
-    }
-    stopRing();
-    if(remainSec === 0) remainSec = totalSec;
-    ensureAudio();
-    $('startBtn').textContent = '일시정지';
-    setState('진행 중');
-    tickId = setInterval(()=>{
-      remainSec--;
-      showTime();
-      if(remainSec <= 0){
-        clearInterval(tickId); tickId = null;
-        $('startBtn').textContent = '시작';
-        setState('종료');
-        ring();
-      }
-    }, 1000);
-  }
-
-  function resetTimer(){
-    if(tickId){ clearInterval(tickId); tickId = null; }
-    stopRing();
-    remainSec = totalSec;
-    $('startBtn').textContent = '시작';
-    setState(totalSec ? '준비됨' : '대기');
-    showTime();
-  }
-
-  function ensureAudio(){
-    try{
-      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if(audioCtx.state === 'suspended') audioCtx.resume();
-    }catch(e){ audioCtx = null; }
-  }
-  function beep(t){
-    if(!audioCtx) return;
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.type = 'sine'; o.frequency.value = 880;
-    o.connect(g); g.connect(audioCtx.destination);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.3, t+0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, t+0.35);
-    o.start(t); o.stop(t+0.36);
-  }
-  function ring(){
-    ensureAudio();
-    if(audioCtx){
-      const now = audioCtx.currentTime;
-      for(let i=0;i<6;i++) beep(now + i*0.45);
-    }
-    try{ navigator.vibrate && navigator.vibrate([300,150,300,150,300]); }catch(e){}
-    $('ringBox').classList.add('ringing');
-  }
-  function stopRing(){ $('ringBox').classList.remove('ringing'); }
-
-  document.querySelectorAll('.preset').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.preset').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      $('minInput').value = '';
-      setTimer(parseFloat(btn.dataset.min));
-    });
-  });
-  $('setBtn').addEventListener('click', ()=>{
-    const v = parseFloat($('minInput').value);
-    if(isNaN(v) || v <= 0){ alert('1 이상의 분을 입력해 주세요.'); return; }
-    document.querySelectorAll('.preset').forEach(b=>b.classList.remove('active'));
-    setTimer(v);
-  });
-  $('minInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('setBtn').click(); });
-  $('startBtn').addEventListener('click', startPause);
-  $('timerResetBtn').addEventListener('click', resetTimer);
-
-  /* ===================== 자가 피드백 메모 ===================== */
-  const NOTE_KEY = 'wordDrawerNotes';
-  let notes = [];
-  let openGroups = new Set();
-
-  function loadNotes(){
-    try{ const v = JSON.parse(localStorage.getItem(NOTE_KEY)); notes = Array.isArray(v) ? v : []; }
-    catch(e){ notes = []; }
-  }
-  function persistNotes(){ try{ localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); }catch(e){} }
-  function fmtDate(ts){
-    const d = new Date(ts), p = n => String(n).padStart(2,'0');
-    return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes());
-  }
-  function renderNotes(){
-    $('noteCount').textContent = '저장된 메모 '+notes.length+'개';
-    $('noteClearBtn').hidden = (notes.length === 0);
-    const dot = $('tabNoteDot');
-    dot.textContent = notes.length;
-    dot.classList.toggle('show', notes.length > 0);
-
-    const el = $('noteList');
-    el.innerHTML = '';
-    if(notes.length === 0){
-      el.innerHTML = '<li class="note-empty">아직 메모가 없습니다.</li>';
-      return;
-    }
-    const groups = {};
-    notes.forEach(nt=>{
-      const key = (nt.case && nt.case.trim()) ? nt.case.trim() : '(케이스 없음)';
-      (groups[key] = groups[key] || []).push(nt);
-    });
-    const keys = Object.keys(groups).sort((a,b)=>{
-      const la = Math.max.apply(null, groups[a].map(n=>n.ts));
-      const lb = Math.max.apply(null, groups[b].map(n=>n.ts));
-      return lb - la;
-    });
-    keys.forEach(key=>{
-      const items = groups[key].slice().sort((a,b)=>a.ts-b.ts);
-      const open = openGroups.has(key);
-      const li = document.createElement('li');
-      li.className = 'note-group';
-
-      const head = document.createElement('button');
-      head.className = 'group-head' + (open?' open':'');
-      head.innerHTML = '<span class="chev">▶</span>'
-        + '<span class="gname">'+escapeHtml(key)+'</span>'
-        + '<span class="gcount">'+items.length+'</span>';
-      head.addEventListener('click', ()=>{
-        if(openGroups.has(key)) openGroups.delete(key); else openGroups.add(key);
-        renderNotes();
-      });
-      li.appendChild(head);
-
-      if(open){
-        const body = document.createElement('div');
-        body.className = 'group-body';
-        items.forEach((nt,i)=>{
-          const row = document.createElement('div');
-          row.className = 'note-row';
-          const del = document.createElement('button');
-          del.className = 'del'; del.textContent = '×'; del.title = '삭제';
-          del.addEventListener('click', ()=>{
-            notes = notes.filter(x=>x.id !== nt.id);
-            persistNotes(); renderNotes();
-          });
-          const meta = document.createElement('div');
-          meta.className = 'note-meta';
-          meta.innerHTML = '<span class="round">'+(i+1)+'회차</span>'
-            + '<span class="nt">'+fmtDate(nt.ts)+'</span>';
-          const bodyTxt = document.createElement('div');
-          bodyTxt.className = 'nbody'; bodyTxt.textContent = nt.note;
-          row.appendChild(del); row.appendChild(meta); row.appendChild(bodyTxt);
-          body.appendChild(row);
-        });
-        li.appendChild(body);
-      }
-      el.appendChild(li);
-    });
-  }
-  function addNote(){
-    const note = $('noteText').value.trim();
-    if(!note){ alert('메모 내용을 입력해 주세요.'); return; }
-    const cs = $('noteCase').value.trim();
-    notes.push({ id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
-                 case: cs, note: note, ts: Date.now() });
-    persistNotes();
-    if(cs) openGroups.add(cs);
-    $('noteText').value = '';
-    renderNotes();
-  }
-  $('noteSaveBtn').addEventListener('click', addNote);
-  $('noteClearBtn').addEventListener('click', ()=>{
-    if(confirm('저장된 메모를 모두 삭제할까요?')){ notes = []; openGroups.clear(); persistNotes(); renderNotes(); }
-  });
-
   /* ===================== 초기화 ===================== */
-  loadNotes();
-  renderNotes();
   restore();
 })();
 </script>

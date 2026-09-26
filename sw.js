@@ -1,5 +1,6 @@
 /* CPX 추출기 서비스 워커 — 오프라인 캐시 */
-const CACHE = 'cpx-extractor-v13';
+const CACHE = 'cpx-extractor-v14';
+const NAV_TIMEOUT_MS = 4000;   // 신호가 약하면 이 시간 뒤 저장된 화면으로 연다
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +11,11 @@ const ASSETS = [
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png'
 ];
+
+// 정상 응답만 저장한다 — 404·서버 오류·공용 와이파이 로그인 페이지 등이 캐시에 들어가지 않게
+function cacheable(res) {
+  return !!res && res.ok && res.type === 'basic' && !res.redirected;
+}
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -25,22 +31,37 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+async function handleNavigate(req) {
+  const saved = await caches.match('./index.html') || await caches.match('./');
+  const network = fetch(req).then((res) => {
+    if (cacheable(res)) {
+      const copy = res.clone();
+      caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(() => {});
+    }
+    return res;
+  });
+
+  // 처음 여는 경우(저장본 없음)는 네트워크를 끝까지 기다린다
+  if (!saved) return network;
+
+  // 저장본이 있으면: 최신 화면을 우선하되, 느리거나 실패하거나 오류 응답이면 저장본으로
+  try {
+    const res = await Promise.race([
+      network,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), NAV_TIMEOUT_MS))
+    ]);
+    return res.ok ? res : saved;
+  } catch (err) {
+    return saved;
+  }
+}
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
-  // HTML 문서는 네트워크 우선 — 옛 화면이 캐시에 눌러앉지 않도록.
-  // 오프라인이면 캐시된 화면으로 대체한다.
   if (req.mode === 'navigate') {
-    e.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => caches.match('./index.html').then((hit) => hit || caches.match('./')))
-    );
+    e.respondWith(handleNavigate(req));
     return;
   }
 
@@ -48,8 +69,10 @@ self.addEventListener('fetch', (e) => {
     caches.match(req).then((hit) => {
       if (hit) return hit;
       return fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        if (cacheable(res)) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        }
         return res;
       }).catch(() => caches.match('./index.html'));
     })

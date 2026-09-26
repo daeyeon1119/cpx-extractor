@@ -3,421 +3,292 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0d9488">
+<meta name="theme-color" content="#F3F2EE">
 <title>CPX 추출기</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CPX 추출기">
 <style>
-  /* ============ 디자인 토큰 ============ */
-  :root{
-    --bg:#eef1f6;
-    --bg-grad:radial-gradient(1200px 600px at 50% -10%, #e2f5f1 0%, transparent 60%);
-    --surface:#ffffff;
-    --surface-2:#f5f7fa;
-    --surface-3:#eef1f6;
-    --border:#e3e8ef;
-    --border-strong:#d3dae4;
-    --text:#101828;
-    --text-2:#475467;
-    --muted:#8a94a6;
-    --primary:#0d9488;
-    --primary-strong:#0b7d73;
-    --primary-ink:#ffffff;
-    --primary-soft:#d6f4ef;
-    --primary-softer:#eafaf7;
-    --accent:#f97316;
-    --danger:#e04b4b;
-    --shadow-sm:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.05);
-    --shadow-md:0 4px 12px rgba(16,24,40,.07),0 2px 6px rgba(16,24,40,.05);
-    --shadow-lg:0 18px 40px -12px rgba(16,24,40,.22);
-    --r-sm:9px; --r-md:14px; --r-lg:20px; --r-xl:26px;
-  }
-  html[data-theme="dark"]{
-    --bg:#0c0f14;
-    --bg-grad:radial-gradient(1200px 600px at 50% -10%, #0e2a29 0%, transparent 60%);
-    --surface:#161b22;
-    --surface-2:#1b212b;
-    --surface-3:#20272f;
-    --border:#28303b;
-    --border-strong:#333c48;
-    --text:#e8ecf2;
-    --text-2:#aeb7c4;
-    --muted:#7f8b9c;
-    --primary:#2dd4bf;
-    --primary-strong:#14b8a6;
-    --primary-ink:#04211f;
-    --primary-soft:rgba(45,212,191,.16);
-    --primary-softer:rgba(45,212,191,.09);
-    --accent:#fb923c;
-    --danger:#f26d6d;
-    --shadow-sm:0 1px 2px rgba(0,0,0,.4);
-    --shadow-md:0 6px 16px rgba(0,0,0,.4);
-    --shadow-lg:0 20px 44px -14px rgba(0,0,0,.6);
-  }
+/* ────────────────────────────────────────────────────────────────
+   디자인 결정 (UI Anti-Slop 체크리스트의 실행 규칙 7가지)
+   1. 방향  시험장 호출판. 화면의 주인공은 '뽑힌 케이스 이름' 하나, 나머지는 조용히.
+   2. 글꼴  한글은 플랫폼 고딕 — 오프라인 PWA라 웹폰트 없이도 모든 기기에서 보장된다.
+            숫자(진행·개수)는 고정폭 tabular — 바뀌어도 자리가 흔들리지 않게.
+   3. 색    종이 바탕 + 먹 글씨. 브랜드 색을 만들지 않는다. 강조는 먹 반전(검은 버튼)뿐.
+   4. 간격  4px 배수 (4·8·12·16·20·24·32·48).
+   5. 위계  ① 케이스 이름 ② 뽑기 버튼·진행 ③ 분야별 현황·기록.
+            카드·그림자 대신 가는 선 + 라벨로 구획. radius: 구조 0 / 조작 요소 2px.
+   6. 밀도  결과만 넉넉하게, 현황·기록은 표처럼 촘촘하게.
+            PC는 좌(뽑기)·우(현황) 2단, 휴대폰은 1단 + 뽑기 버튼을 엄지 위치에 고정.
+   7. 모션  새 케이스 등장(상태 변화)과 진행 막대만. 장식용 등장 효과 없음.
+   ──────────────────────────────────────────────────────────────── */
+:root{
+  --bg:#F3F2EE; --surface:#FAF9F6;
+  --ink:#161615; --ink-2:#3A3936; --muted:#6C6A65; --faint:#A09D96;
+  --line:#DCD9D2; --line-2:#C6C2B9; --inv-fg:#FAF9F6; --scrim:rgba(22,22,21,.42);
+  --f-ui:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --f-num:ui-monospace,"SF Mono","Cascadia Mono",Consolas,"Roboto Mono",monospace;
+}
+html[data-theme="dark"]{
+  --bg:#121211; --surface:#1A1A18;
+  --ink:#ECEAE4; --ink-2:#CFCCC4; --muted:#9A978E; --faint:#67645E;
+  --line:#2A2926; --line-2:#3C3B37; --inv-fg:#121211; --scrim:rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;
+  letter-spacing:-.005em;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:disabled{cursor:not-allowed}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+[hidden]{display:none !important}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums;letter-spacing:0}
+.label{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.caption{font-size:12.5px;line-height:1.55;color:var(--muted)}
+.link{font-size:13px;font-weight:600;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px}
+.link:hover{color:var(--ink)}
 
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
-  body{
-    background:var(--bg);
-    background-image:var(--bg-grad);
-    background-attachment:fixed;
-    color:var(--text);
-    font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
-    -webkit-font-smoothing:antialiased;
-    text-rendering:optimizeLegibility;
-    line-height:1.5;
-    letter-spacing:-.01em;
-    padding:0 14px calc(28px + env(safe-area-inset-bottom));
-  }
-  .app{max-width:600px;margin:0 auto}
-  ::selection{background:var(--primary-soft);color:var(--text)}
+.app{max-width:1000px;margin:0 auto;padding:0 20px calc(32px + env(safe-area-inset-bottom))}
+@media(max-width:560px){.app{padding-left:16px;padding-right:16px}}
 
-  /* ============ 상단 앱바 ============ */
-  .appbar{
-    position:sticky;top:0;z-index:20;
-    display:flex;align-items:center;gap:12px;
-    padding:16px 4px 12px;
-    background:linear-gradient(var(--bg) 78%, transparent);
-    -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
-  }
-  .logo{
-    width:42px;height:42px;flex:none;border-radius:13px;
-    display:grid;place-items:center;
-    background:linear-gradient(145deg,var(--primary),var(--primary-strong));
-    color:#fff;box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,.25);
-  }
-  .logo svg{width:23px;height:23px}
-  .brand{flex:1;min-width:0}
-  .brand-title{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
-  .brand-sub{font-size:12px;color:var(--muted);font-weight:500;margin-top:1px}
-  .icon-btn{
-    width:40px;height:40px;flex:none;border-radius:12px;cursor:pointer;
-    border:1px solid var(--border);background:var(--surface);color:var(--text-2);
-    display:grid;place-items:center;font-size:17px;
-    transition:background .15s,transform .08s,border-color .15s;
-  }
-  .icon-btn:hover{background:var(--surface-2);border-color:var(--border-strong)}
-  .icon-btn:active{transform:scale(.94)}
+/* ── 상단: 이름과 도구만 ── */
+.top{display:flex;align-items:center;gap:8px;height:56px;border-bottom:1px solid var(--line)}
+.mark{margin-right:auto;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.tool{height:32px;padding:0 10px;border:1px solid var(--line-2);border-radius:2px;font-size:13px;font-weight:600;color:var(--ink-2)}
+.tool:hover{border-color:var(--ink);color:var(--ink)}
+.tool.icon{width:32px;padding:0;display:grid;place-items:center}
+.tool.icon svg{width:16px;height:16px}
 
-  /* ============ 공용 애니메이션 ============ */
-  @keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* ── 조작 요소 ── */
+.btn-primary{display:flex;align-items:center;justify-content:center;width:100%;height:56px;padding:0 16px;
+  background:var(--ink);color:var(--inv-fg);border-radius:2px;font-size:16px;font-weight:700;letter-spacing:-.01em}
+.btn-primary:hover:not(:disabled){background:var(--ink-2)}
+.btn-primary:active:not(:disabled){transform:translateY(1px)}
+.btn-primary:disabled{background:var(--line);color:var(--faint)}
 
-  /* ============ 카드 ============ */
-  .card{
-    background:var(--surface);border:1px solid var(--border);
-    border-radius:var(--r-lg);padding:20px;margin-bottom:16px;
-    box-shadow:var(--shadow-sm);
-  }
-  .card-title{
-    font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px;
-  }
-  .card-title .ico{color:var(--primary)}
+/* ── 시작 화면: 첫 화면이 곧 기능 ── */
+.start{max-width:640px;padding-top:28px}
+.row-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.cov{display:inline-flex;align-items:baseline;gap:6px;height:36px;padding:0 12px;border:1px solid var(--line-2);
+  border-radius:2px;background:var(--surface);font-size:14px;font-weight:600;line-height:34px}
+.cov b{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:12px;font-weight:500;color:var(--muted)}
+.cov:hover{border-color:var(--ink)}
+.cov.off{background:transparent;border-style:dashed;color:var(--faint);text-decoration:line-through}
+.cov.off b{color:var(--faint)}
+.chips-note{margin-top:10px}
+.cta{margin-top:28px}
+.cta .caption{margin-top:8px}
 
-  /* ============ 버튼 ============ */
-  button{font-family:inherit}
-  .btn{
-    font-size:15px;font-weight:700;letter-spacing:-.01em;cursor:pointer;
-    border:1px solid var(--border-strong);border-radius:var(--r-sm);
-    padding:12px 18px;background:var(--surface);color:var(--text);
-    display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    transition:transform .08s ease,background .15s,border-color .15s,box-shadow .15s,opacity .15s;
-  }
-  .btn:hover{background:var(--surface-2);border-color:var(--muted)}
-  .btn:active{transform:translateY(1px)}
-  .btn:disabled{opacity:.4;cursor:not-allowed}
-  .btn.primary{
-    background:linear-gradient(145deg,var(--primary),var(--primary-strong));
-    border-color:transparent;color:var(--primary-ink);
-    box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,.22);
-  }
-  .btn.primary:hover:not(:disabled){filter:brightness(1.05)}
-  .btn.primary:disabled{box-shadow:none}
-  .btn.ghost{background:transparent;border-color:var(--border)}
-  .btn.block{width:100%}
-  .btn.lg{padding:16px 22px;font-size:16px;border-radius:var(--r-md)}
-  .btn svg{width:18px;height:18px}
-  .row{display:flex;gap:10px;flex-wrap:wrap}
-  .row.center{justify-content:center}
+.pick{margin-top:36px;border-top:1px solid var(--line)}
+.disclose{display:flex;align-items:center;justify-content:space-between;width:100%;height:52px;font-size:15px;font-weight:700;text-align:left}
+.disclose .chev{font-size:12px;color:var(--muted);transition:transform .15s}
+.disclose[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.custom-box{display:none}
+.custom-box.open{display:block}
+.pick-head{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:8px;font-size:13px;color:var(--muted)}
+.pick-head b{color:var(--ink);font-weight:700}
+.pick-group{display:grid;grid-template-columns:136px minmax(0,1fr);gap:8px 16px;padding:12px 0;border-top:1px solid var(--line)}
+.pick-group-head{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.pick-gname{font-size:13.5px;font-weight:700}
+.pick-gall{font-size:12px;color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+.pick-gall:hover{color:var(--ink)}
+.pick-chips{display:flex;flex-wrap:wrap;gap:6px}
+.case-chip{height:32px;padding:0 10px;border:1px solid var(--line-2);border-radius:2px;background:var(--surface);font-size:13.5px}
+.case-chip:hover{border-color:var(--ink)}
+.case-chip.on{background:var(--ink);border-color:var(--ink);color:var(--inv-fg);font-weight:700}
+.pick-foot{position:sticky;bottom:0;padding:12px 0 calc(12px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line)}
+@media(max-width:560px){
+  .pick-group{grid-template-columns:minmax(0,1fr)}
+  .pick-group-head{flex-direction:row;align-items:baseline;justify-content:space-between}
+  /* 고정 버튼 영역은 화면 가로 끝까지 — 경계가 비치지 않게 */
+  .pick-foot{margin:0 -16px;padding-left:16px;padding-right:16px}
+}
+.local-note{margin-top:28px}
 
-  /* ============ 입력 화면 ============ */
-  .hero-start{text-align:center;padding:6px 4px 4px}
-  .hero-start .badge{
-    display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;
-    color:var(--primary-strong);background:var(--primary-soft);
-    padding:5px 12px;border-radius:999px;letter-spacing:.02em;
-  }
-  .hero-start h2{font-size:23px;font-weight:800;letter-spacing:-.02em;margin:14px 0 6px}
-  .hero-start p{font-size:14px;color:var(--text-2);max-width:34ch;margin:0 auto 20px}
-  .cov-grid{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:16px 0 4px}
-  .cov{
-    font-size:12.5px;font-weight:600;color:var(--text-2);
-    background:var(--surface-2);border:1px solid var(--border);
-    padding:5px 10px;border-radius:999px;
-    cursor:pointer;font-family:inherit;
-    transition:opacity .15s,border-color .15s,background .15s,transform .08s;
-  }
-  .cov:hover{border-color:var(--muted)}
-  .cov:active{transform:scale(.95)}
-  .cov b{color:var(--primary-strong);font-weight:800;margin-left:3px}
-  .cov.off{opacity:.38;border-style:dashed;background:transparent}
-  .cov.off b{color:var(--muted)}
-  .cov-tools{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px;min-height:18px}
-  .cov-hint{font-size:12px;color:var(--muted)}
-  .cov-all{border:none;background:none;padding:0;font-size:12px;font-weight:700;color:var(--primary-strong);cursor:pointer;text-decoration:underline}
+/* ── 추첨 화면 ── */
+/* PC: 좌(결과·뽑기) / 우(현황).  휴대폰: 결과 → 현황 순으로 쌓고, 뽑기 버튼은 화면 아래에 계속 붙어 있게 */
+.stage-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);
+  grid-template-areas:"stage side" "bar side";grid-template-rows:auto 1fr;column-gap:56px;padding-top:20px}
+.stage{grid-area:stage}
+.side{grid-area:side}
+@media(max-width:860px){
+  .stage-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage" "side" "bar";grid-template-rows:auto}
+}
+.stage-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.seg{display:inline-flex;gap:2px;padding:2px;border:1px solid var(--line-2);border-radius:2px}
+.seg button{height:30px;padding:0 12px;border-radius:1px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button.active{background:var(--ink);color:var(--inv-fg)}
+.mode-note{margin-top:10px;min-height:20px}
 
-  /* 케이스 개별 선택 */
-  .pick-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12.5px;color:var(--text-2);font-weight:700}
-  .pick-head b{color:var(--primary-strong)}
-  .pick-group{margin-bottom:13px}
-  .pick-group:last-child{margin-bottom:0}
-  .pick-group-head{display:flex;align-items:baseline;gap:8px;margin-bottom:7px}
-  .pick-gname{font-size:11.5px;font-weight:800;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
-  .pick-gall{border:none;background:none;font-size:11.5px;font-weight:700;color:var(--primary-strong);cursor:pointer;padding:0;text-decoration:underline}
-  .pick-chips{display:flex;flex-wrap:wrap;gap:6px}
-  .case-chip{
-    font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer;
-    border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);
-    font-family:inherit;transition:background .15s,border-color .15s,color .15s,transform .08s;
-  }
-  .case-chip:hover{border-color:var(--muted)}
-  .case-chip:active{transform:scale(.95)}
-  .case-chip.on{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-strong);font-weight:700}
+.result{display:flex;flex-direction:column;justify-content:flex-end;min-height:208px;margin-top:20px;
+  padding:28px 0 24px;border-top:1px solid var(--ink);border-bottom:1px solid var(--line)}
+.result .cat-badge{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.result .word{display:block;margin-top:6px;font-size:clamp(40px,10.5vw,66px);font-weight:800;line-height:1.06;letter-spacing:-.035em;word-break:keep-all}
+.result .placeholder{font-size:clamp(26px,6.4vw,34px);font-weight:700;line-height:1.2;letter-spacing:-.02em;color:var(--faint)}
+.result .placeholder small{display:block;margin-top:10px;font-size:13px;font-weight:600;letter-spacing:0;color:var(--muted)}
+.result .done-note{display:block;margin-top:14px;font-size:13px;font-weight:600;color:var(--ink-2)}
+.result.fresh .word,.result.fresh .cat-badge{animation:fresh .16s ease-out}
+@keyframes fresh{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
-  .custom-toggle{
-    width:100%;margin-top:14px;border:1px dashed var(--border-strong);background:transparent;
-    color:var(--text-2);font-weight:600;font-size:14px;padding:12px;border-radius:var(--r-sm);
-    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
-    transition:background .15s,border-color .15s;
-  }
-  .custom-toggle:hover{background:var(--surface-2);border-color:var(--muted)}
-  .custom-toggle .chev{transition:transform .2s;font-size:11px}
-  .custom-toggle.open .chev{transform:rotate(180deg)}
-  .custom-box{margin-top:12px;display:none}
-  .custom-box.open{display:block;animation:viewIn .25s ease}
+.progress{display:flex;align-items:center;gap:12px;margin-top:14px}
+.track{flex:1;height:2px;background:var(--line)}
+.track>span{display:block;height:100%;width:0;background:var(--ink);transition:width .2s ease-out}
+.prog-num{font-size:13px;color:var(--ink-2)}
 
-  /* ============ 추첨 스테이지 ============ */
-  .stage-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
-  .seg{display:inline-flex;padding:4px;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
-  .seg button{
-    border:none;background:transparent;cursor:pointer;font-family:inherit;
-    font-size:12.5px;font-weight:700;color:var(--muted);padding:7px 11px;border-radius:8px;
-    transition:color .15s,background .15s,box-shadow .15s;white-space:nowrap;
-  }
-  .seg button:hover{color:var(--text-2)}
-  .seg button.active{background:var(--surface);color:var(--primary-strong);box-shadow:var(--shadow-sm)}
+.draw-bar{grid-area:bar;align-self:start;position:sticky;bottom:0;z-index:5;margin-top:20px;
+  padding:12px 0 calc(12px + env(safe-area-inset-bottom));background:var(--bg)}
+.kbd-hint{margin-top:8px;text-align:center}
+@media(hover:none){.kbd-hint{display:none}}
+@media(max-width:860px){
+  /* 화면 가로 끝까지 채워 고정 영역의 경계가 보이지 않게, 위쪽에만 의도된 선 하나 */
+  .draw-bar{margin:24px -20px 0;padding-left:20px;padding-right:20px;border-top:1px solid var(--line)}
+  .result{min-height:150px;padding:20px 0 18px}
+}
+@media(max-width:560px){
+  .draw-bar{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}
+}
 
-  .stage{
-    position:relative;text-align:center;
-    background:
-      radial-gradient(120% 120% at 50% 0%, var(--primary-softer), transparent 62%),
-      var(--surface-2);
-    border:1px solid var(--border);border-radius:var(--r-lg);
-    padding:30px 18px 26px;overflow:hidden;
-  }
-  .stage::before{
-    content:"";position:absolute;inset:0;pointer-events:none;
-    background:radial-gradient(60% 40% at 50% 120%, var(--primary-soft), transparent 70%);
-    opacity:.5;
-  }
-  .prob{position:relative;font-size:12.5px;font-weight:700;letter-spacing:.02em;color:var(--muted);min-height:18px}
-  .prob b{color:var(--primary-strong);font-size:14px}
-  .result{position:relative;margin:18px auto 12px;min-height:86px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
-  .result .cat-badge{
-    font-size:12.5px;font-weight:800;letter-spacing:.02em;color:var(--primary-ink);
-    background:var(--primary);padding:5px 13px;border-radius:999px;
-    box-shadow:var(--shadow-sm);animation:badgeIn .4s ease .05s both;
-  }
-  .result .word{
-    font-size:clamp(30px,8.5vw,46px);font-weight:800;letter-spacing:-.03em;line-height:1.12;
-    word-break:keep-all;color:var(--text);
-    animation:pop .45s cubic-bezier(.18,1.5,.4,1);
-  }
-  .result .placeholder{font-size:16px;color:var(--muted);font-weight:500}
-  .result .placeholder.done{font-size:20px;font-weight:800;color:var(--primary-strong)}
-  .result .done-note{margin-top:2px;font-size:13px;font-weight:700;color:var(--primary-strong);letter-spacing:.02em}
-  @keyframes pop{0%{transform:scale(.5) translateY(8px);opacity:0}100%{transform:scale(1);opacity:1}}
-  @keyframes badgeIn{0%{transform:translateY(6px);opacity:0}100%{transform:none;opacity:1}}
+.side{padding-top:24px}
+@media(min-width:861px){.side{padding-top:62px}}
+.side-sec+.side-sec{margin-top:32px}
+.sec-label{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.cat-card{display:grid;grid-template-columns:minmax(0,1fr) 72px 52px;align-items:center;gap:12px;min-height:36px;border-bottom:1px solid var(--line);font-size:13.5px}
+.cat-name{font-weight:600}
+.cat-bar{height:2px;background:var(--line)}
+.cat-bar>span{display:block;height:100%;background:var(--ink)}
+.cat-frac{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:12.5px;text-align:right;color:var(--ink-2)}
+.cat-card.done{color:var(--faint)}
+.cat-card.done .cat-frac{color:var(--faint)}
+.cat-card.done .cat-bar>span{background:var(--faint)}
+.hist-list{list-style:none}
+.hist-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.hist-row:first-child .hist-w{font-weight:800}
+.hist-n{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:12px;color:var(--faint)}
+.hist-w{font-weight:600;word-break:keep-all}
+.hist-c{font-size:12px;color:var(--muted);white-space:nowrap}
+.hist-empty{padding:12px 0;font-size:13px;color:var(--faint)}
 
-  /* 진행 바 */
-  .progress{position:relative;margin-top:6px}
-  .progress-head{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--text-2);font-weight:600;margin-bottom:6px}
-  .progress-head b{color:var(--primary-strong);font-weight:800;font-size:14px}
-  .track{height:9px;border-radius:999px;background:var(--surface-3);overflow:hidden}
-  .track > span{display:block;height:100%;border-radius:999px;width:0;
-    background:linear-gradient(90deg,var(--primary),var(--primary-strong));
-    transition:width .5s cubic-bezier(.22,1,.36,1)}
+/* ── 설치 안내 (사용자가 [앱 설치]를 눌렀을 때만) ── */
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:var(--scrim)}
+@media(min-width:561px){.modal{align-items:center;padding:24px}}
+.modal-card{width:100%;max-width:440px;background:var(--bg);border-top:1px solid var(--ink);padding:20px 20px calc(20px + env(safe-area-inset-bottom))}
+@media(min-width:561px){.modal-card{border:1px solid var(--ink);border-radius:2px}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-title{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.modal-x{width:32px;height:32px;font-size:20px;color:var(--muted)}
+.modal-x:hover{color:var(--ink)}
+.modal-body ol{list-style:none;counter-reset:st;display:grid;gap:12px}
+.modal-body li{counter-increment:st;display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;font-size:14.5px;line-height:1.6}
+.modal-body li::before{content:counter(st);font-family:var(--f-num);font-size:12px;color:var(--muted);padding-top:3px}
+.modal-body b{font-weight:800}
+.modal-note{margin-top:14px}
+.modal-card .btn-primary{margin-top:20px;height:48px;font-size:15px}
 
-  .stage-actions{display:flex;gap:10px;margin-top:16px}
-  .stage-actions .btn.primary{flex:2}
-  .stage-actions .btn.ghost{flex:1}
-
-  /* 분야 현황 */
-  .cat-overview{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
-  @media(max-width:420px){.cat-overview{grid-template-columns:1fr}}
-  .cat-card{
-    background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:11px 12px;
-    transition:opacity .3s,border-color .2s;
-  }
-  .cat-card.done{opacity:.5;border-style:dashed}
-  .cat-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
-  .cat-name{font-size:13.5px;font-weight:700;color:var(--text)}
-  .cat-frac{font-size:12px;font-weight:800;color:var(--primary-strong);font-variant-numeric:tabular-nums}
-  .cat-card.done .cat-frac{color:var(--muted)}
-  .cat-bar{height:5px;border-radius:999px;background:var(--surface-3);overflow:hidden}
-  .cat-bar > span{display:block;height:100%;background:var(--primary);border-radius:999px;transition:width .5s ease}
-
-  /* 히스토리 */
-  .hist-list{list-style:none}
-  .hist-row{display:flex;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--border)}
-  .hist-row:last-child{border-bottom:none}
-  .hist-n{
-    min-width:24px;height:24px;flex:none;border-radius:8px;font-size:11.5px;font-weight:800;
-    background:var(--primary-soft);color:var(--primary-strong);display:grid;place-items:center;font-variant-numeric:tabular-nums;
-  }
-  .hist-w{font-size:15px;font-weight:600;flex:1;word-break:keep-all}
-  .hist-c{font-size:12px;color:var(--muted);font-weight:600;background:var(--surface-2);padding:3px 9px;border-radius:999px;border:1px solid var(--border)}
-  .hist-empty{color:var(--muted);font-size:13.5px;font-style:normal;text-align:center;padding:10px 0}
-
-  .foot{margin:22px 0 6px;font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
-
-  /* ============ 설치 안내 모달 ============ */
-  .modal{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;padding:0;background:rgba(16,24,40,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
-  @media(min-width:520px){.modal{align-items:center;padding:18px}}
-  .modal[hidden]{display:none}
-  .modal-card{
-    width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border);
-    border-radius:var(--r-xl) var(--r-xl) 0 0;box-shadow:var(--shadow-lg);
-    padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:sheetUp .28s cubic-bezier(.22,1,.36,1);
-  }
-  @media(min-width:520px){.modal-card{border-radius:var(--r-lg);animation:viewIn .22s ease}}
-  @keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
-  .modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
-  .modal-title{font-size:18px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
-  .modal-title .mi{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary-strong);font-size:17px}
-  .modal-x{width:34px;height:34px;flex:none;border:none;background:var(--surface-2);border-radius:10px;font-size:21px;line-height:1;color:var(--text-2);cursor:pointer;transition:background .15s}
-  .modal-x:hover{background:var(--surface-3)}
-  .modal-body ol{margin:0;padding-left:0;list-style:none;counter-reset:st;display:flex;flex-direction:column;gap:12px}
-  .modal-body li{counter-increment:st;position:relative;padding-left:38px;font-size:14.5px;line-height:1.6;color:var(--text)}
-  .modal-body li::before{content:counter(st);position:absolute;left:0;top:-1px;width:26px;height:26px;border-radius:8px;background:var(--primary);color:var(--primary-ink);font-size:13px;font-weight:800;display:grid;place-items:center}
-  .modal-body b{font-weight:800;color:var(--primary-strong)}
-  .modal-note{margin-top:14px;font-size:12.5px;color:var(--muted);line-height:1.6}
+@media(prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
 </style>
 </head>
 <body>
 <div class="app">
-  <!-- 앱바 -->
-  <header class="appbar">
-    <div class="logo" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-    </div>
-    <div class="brand">
-      <div class="brand-title">CPX 추출기</div>
-      <div class="brand-sub">임상수행평가 케이스 랜덤 추출 · 연습</div>
-    </div>
-    <button class="btn primary" id="installBtn" hidden style="padding:9px 14px;font-size:13px;border-radius:12px">설치</button>
-    <button class="icon-btn" id="themeBtn" title="테마 전환" aria-label="테마 전환">🌙</button>
+  <header class="top">
+    <span class="mark">CPX 추출기</span>
+    <button class="tool" id="installBtn" hidden>앱 설치</button>
+    <button class="tool icon" id="themeBtn" aria-label="어두운 화면으로 전환">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"/></svg>
+    </button>
   </header>
 
-  <main>
-    <section id="view-draw">
-      <!-- 시작 화면 -->
-      <div class="card" id="inputPanel">
-        <div class="hero-start">
-          <span class="badge">✚ 표준 임상표현 <span id="badgeTotal">56</span></span>
-          <h2>CPX 케이스 뽑기</h2>
-          <p>실제 시험처럼 케이스를 무작위로 뽑아 연습하세요. 뽑은 케이스는 다시 나오지 않습니다.</p>
-          <div class="cov-grid" id="covGrid"></div>
-          <div class="cov-tools">
-            <span class="cov-hint">분야를 눌러 빼거나 다시 넣을 수 있어요</span>
-            <button type="button" class="cov-all" id="covAllBtn" hidden>모든 분야 선택</button>
-          </div>
-        </div>
-        <div class="row" style="margin-top:18px">
-          <button class="btn primary lg block" id="presetBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>
-            <span id="presetLabel">CPX 56 케이스 시작</span>
-          </button>
-        </div>
-        <button class="custom-toggle" id="casePickToggle">
-          원하는 케이스만 골라 연습하기 <span class="chev">▾</span>
+  <main id="view-draw">
+    <!-- 시작: 첫 화면이 곧 기능 -->
+    <section class="start" id="inputPanel">
+      <div class="row-head">
+        <span class="label">분야</span>
+        <button type="button" class="link" id="covAllBtn" hidden>모두 포함</button>
+      </div>
+      <div class="chips" id="covGrid"></div>
+      <p class="caption chips-note">누른 분야는 이번 라운드에서 빠집니다.</p>
+
+      <div class="cta">
+        <button class="btn-primary" id="presetBtn"><span id="presetLabel">56개 케이스로 시작</span></button>
+        <p class="caption">뽑은 케이스는 이번 라운드에서 다시 나오지 않습니다.</p>
+      </div>
+
+      <div class="pick">
+        <button type="button" class="disclose" id="casePickToggle" aria-expanded="false" aria-controls="casePickBox">
+          케이스 직접 고르기 <span class="chev" aria-hidden="true">▾</span>
         </button>
         <div class="custom-box" id="casePickBox">
           <div class="pick-head">
-            <span id="pickCount">선택된 케이스 <b>0</b>개</span>
-            <button type="button" class="cov-all" id="pickClearBtn" hidden>전체 해제</button>
+            <span id="pickCount">고른 케이스 <b class="num">0</b>개</span>
+            <button type="button" class="link" id="pickClearBtn" hidden>모두 해제</button>
           </div>
           <div id="casePickList"></div>
-          <button class="btn primary block" id="pickStartBtn" disabled style="margin-top:14px">케이스를 선택하세요</button>
-        </div>
-      </div>
-
-      <!-- 추첨 스테이지 -->
-      <div class="card" id="drawPanel" hidden>
-        <div class="stage-top">
-          <div class="seg" id="modeSelect">
-            <button class="active" data-mode="rotate">분야 순환</button>
-            <button data-mode="once">분야당 1개</button>
-            <button data-mode="random">완전 랜덤</button>
+          <div class="pick-foot">
+            <button class="btn-primary" id="pickStartBtn" disabled>케이스를 고르세요</button>
           </div>
         </div>
-
-        <div class="stage">
-          <div class="prob" id="probText"></div>
-          <div class="result" id="result">
-            <span class="placeholder">버튼을 눌러 케이스를 뽑으세요</span>
-          </div>
-        </div>
-
-        <div class="stage-actions">
-          <button class="btn primary lg" id="drawBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 14h6v6h-6zM14 4l6 6M20 4l-6 6M4 14l6 6M10 14l-6 6"/></svg>
-            뽑기
-          </button>
-          <button class="btn ghost lg" id="resetBtn">처음으로</button>
-        </div>
-
-        <div class="progress" style="margin-top:20px">
-          <div class="progress-head"><span>진행률</span><span><b id="progDone">0</b> / <span id="progTotal">0</span></span></div>
-          <div class="track"><span id="progFill"></span></div>
-        </div>
       </div>
 
-      <!-- 분야 현황 -->
-      <div class="card" id="catCard" hidden>
-        <div class="card-title"><span class="ico">◧</span> 분야별 현황</div>
-        <div class="cat-overview" id="catOverview"></div>
-      </div>
-
-      <!-- 뽑은 기록 -->
-      <div class="card" id="histCard" hidden>
-        <div class="card-title"><span class="ico">≡</span> 뽑은 기록 <span id="histCount" style="color:var(--muted);font-weight:700"></span></div>
-        <ul class="hist-list" id="historyList"></ul>
-      </div>
+      <p class="caption local-note">기록과 선택은 이 기기의 브라우저에만 저장됩니다.</p>
     </section>
 
-  </main>
+    <!-- 추첨 -->
+    <section id="drawPanel" hidden>
+      <div class="stage-grid">
+        <div class="stage">
+          <div class="stage-top">
+            <div class="seg" id="modeSelect" role="group" aria-label="뽑기 방식">
+              <button type="button" class="active" data-mode="mix" aria-pressed="true">고르게 섞기</button>
+              <button type="button" data-mode="once" aria-pressed="false">분야당 1개</button>
+              <button type="button" data-mode="random" aria-pressed="false">완전 랜덤</button>
+            </div>
+            <button type="button" class="link" id="resetBtn">처음으로</button>
+          </div>
+          <p class="caption mode-note" id="probText"></p>
 
-  <p class="foot">CPX 표준 임상표현 <span id="footTotal">56</span> · 비복원 추출 · 분야 순환으로 골고루 연습<br>모든 데이터는 이 기기에만 저장됩니다.</p>
+          <div class="result" id="result" aria-live="polite"></div>
+
+          <div class="progress">
+            <div class="track"><span id="progFill"></span></div>
+            <span class="prog-num num"><span id="progDone">0</span> / <span id="progTotal">0</span></span>
+          </div>
+        </div>
+
+        <aside class="side">
+          <section class="side-sec" id="catCard" hidden>
+            <div class="sec-label"><span class="label">분야별</span></div>
+            <div id="catOverview"></div>
+          </section>
+          <section class="side-sec" id="histCard" hidden>
+            <div class="sec-label"><span class="label">뽑은 순서</span><span class="caption num" id="histCount"></span></div>
+            <ol class="hist-list" id="historyList"></ol>
+          </section>
+        </aside>
+
+        <div class="draw-bar">
+          <button class="btn-primary" id="drawBtn">첫 케이스 뽑기</button>
+          <p class="caption kbd-hint">스페이스바로도 뽑을 수 있습니다</p>
+        </div>
+      </div>
+    </section>
+  </main>
 </div>
 
-<!-- 설치 방법 안내 모달 -->
+<!-- 설치 방법 안내 -->
 <div class="modal" id="installHelp" hidden>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-label="앱 설치 방법">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="installHelpTitle">
     <div class="modal-head">
-      <span class="modal-title"><span class="mi">＋</span>홈 화면에 앱 설치</span>
-      <button class="modal-x" data-close aria-label="닫기">×</button>
+      <span class="modal-title" id="installHelpTitle">홈 화면에 설치하기</span>
+      <button type="button" class="modal-x" data-close aria-label="닫기">×</button>
     </div>
     <div class="modal-body" id="installHelpBody"></div>
-    <p class="modal-note" id="installHelpNote"></p>
-    <button class="btn primary block" data-close style="margin-top:18px">알겠어요</button>
+    <p class="caption modal-note" id="installHelpNote"></p>
+    <button type="button" class="btn-primary" data-close>확인</button>
   </div>
 </div>
 
@@ -425,7 +296,7 @@
 (function(){
   const $ = id => document.getElementById(id);
 
-  /* ===== CPX 표준 임상표현 (분야별) ===== */
+  /* ===== 케이스 목록 (사용자가 정한 명칭 그대로) ===== */
   const CASES = {
     '소화기': ['급성 복통','소화불량/만성복통','토혈','혈변','구토','변비','설사','황달'],
     '순환기': ['가슴통증','실신','두근거림','고혈압','이상지질혈증'],
@@ -438,7 +309,6 @@
     '산부/여성/소아': ['유방통/유방덩이','질분비물','질출혈','월경이상','월경통','산전진찰','성장/발달지연','예방접종'],
     '상담': ['음주상담','금연상담','물질 오남용','나쁜 소식 전하기','가정폭력','성폭력','자살']
   };
-
   // 전체 케이스 수 — 목록에서 자동 계산 (표기가 어긋나지 않도록)
   const TOTAL_CASES = Object.keys(CASES).reduce((s,c)=>s+CASES[c].length, 0);
 
@@ -457,10 +327,13 @@
   }
 
   /* ===== 테마 ===== */
-  const THEME_KEY='cpxTheme';
+  const THEME_KEY = 'cpxTheme';
+  const THEME_BG = { light:'#F3F2EE', dark:'#121211' };
   function applyTheme(t){
-    document.documentElement.setAttribute('data-theme',t);
-    $('themeBtn').textContent = t==='dark' ? '☀️' : '🌙';
+    document.documentElement.setAttribute('data-theme', t);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute('content', THEME_BG[t]);
+    $('themeBtn').setAttribute('aria-label', t === 'dark' ? '밝은 화면으로 전환' : '어두운 화면으로 전환');
   }
   let theme = null;
   try{ theme = localStorage.getItem(THEME_KEY); }catch(e){}   // 저장소가 막혀도 앱은 떠야 한다
@@ -469,52 +342,47 @@
   }
   applyTheme(theme);
   $('themeBtn').addEventListener('click', ()=>{
-    theme = theme==='dark' ? 'light' : 'dark';
-    try{ localStorage.setItem(THEME_KEY,theme); }catch(e){}
+    theme = theme === 'dark' ? 'light' : 'dark';
+    try{ localStorage.setItem(THEME_KEY, theme); }catch(e){}
     applyTheme(theme);
   });
 
-  /* 분야 선택 칩 (시작화면) — 눌러서 포함/제외 */
+  /* ===== 분야 선택 — 누르면 이번 라운드에서 제외 ===== */
   const CATSEL_KEY = 'cpxCatSel';
   let catSel = {};   // {분야: false} 만 기록 (기본은 포함)
   try{ const v = JSON.parse(localStorage.getItem(CATSEL_KEY)); if(v && typeof v === 'object') catSel = v; }catch(e){}
   function selectedCats(){ return Object.keys(CASES).filter(c => catSel[c] !== false); }
   function persistCatSel(){ try{ localStorage.setItem(CATSEL_KEY, JSON.stringify(catSel)); }catch(e){} }
   function renderCovGrid(){
-    $('covGrid').innerHTML = Object.keys(CASES).map(c =>
-      '<button type="button" class="cov'+(catSel[c]===false?' off':'')+'" data-cat="'+escapeHtml(c)+'">'
-      + escapeHtml(c)+'<b>'+CASES[c].length+'</b></button>'
-    ).join('');
+    $('covGrid').innerHTML = Object.keys(CASES).map(c => {
+      const off = catSel[c] === false;
+      return '<button type="button" class="cov'+(off?' off':'')+'" data-cat="'+escapeHtml(c)+'" aria-pressed="'+(!off)+'">'
+        + escapeHtml(c)+'<b>'+CASES[c].length+'</b></button>';
+    }).join('');
     const sel = selectedCats();
-    const total = sel.reduce((s,c)=>s+CASES[c].length,0);
+    const total = sel.reduce((s,c)=>s+CASES[c].length, 0);
     const allOn = (sel.length === Object.keys(CASES).length);
     $('presetLabel').textContent = allOn
-      ? 'CPX ' + TOTAL_CASES + ' 케이스 시작'
-      : (sel.length === 0 ? '분야를 선택하세요'
-                          : '선택한 '+sel.length+'개 분야 · '+total+' 케이스 시작');
+      ? TOTAL_CASES + '개 케이스로 시작'
+      : (sel.length === 0 ? '분야를 하나 이상 고르세요'
+                          : sel.length + '개 분야 · ' + total + '개 케이스로 시작');
     $('presetBtn').disabled = (sel.length === 0);
     $('covAllBtn').hidden = allOn;
   }
   $('covGrid').addEventListener('click', e=>{
     const b = e.target.closest('.cov'); if(!b) return;
     const c = b.dataset.cat;
-    catSel[c] = (catSel[c] === false);   // 토글: 꺼져 있으면 켜고, 켜져 있으면 끔
-    persistCatSel();
-    renderCovGrid();
+    catSel[c] = (catSel[c] === false);   // 꺼져 있으면 켜고, 켜져 있으면 끈다
+    persistCatSel(); renderCovGrid();
   });
-  $('covAllBtn').addEventListener('click', ()=>{
-    catSel = {};
-    persistCatSel();
-    renderCovGrid();
-  });
-  $('badgeTotal').textContent = TOTAL_CASES;
-  $('footTotal').textContent = TOTAL_CASES;
+  $('covAllBtn').addEventListener('click', ()=>{ catSel = {}; persistCatSel(); renderCovGrid(); });
   renderCovGrid();
 
-  /* 케이스 개별 선택 — 원하는 주증상만 골라 연습 */
+  /* ===== 케이스 직접 고르기 ===== */
   $('casePickToggle').addEventListener('click', ()=>{
-    $('casePickToggle').classList.toggle('open');
-    $('casePickBox').classList.toggle('open');
+    const open = !$('casePickBox').classList.contains('open');
+    $('casePickBox').classList.toggle('open', open);
+    $('casePickToggle').setAttribute('aria-expanded', String(open));
   });
 
   const CASESEL_KEY = 'cpxCaseSel';
@@ -547,17 +415,18 @@
         +   '<button type="button" class="pick-gall" data-cat="'+escapeHtml(cat)+'">'+(allOn ? '전체 해제' : '전체 선택')+'</button>'
         + '</div>'
         + '<div class="pick-chips">'
-        +   CASES[cat].map(w =>
-              '<button type="button" class="case-chip'+(caseSel[caseKey(cat,w)] ? ' on' : '')+'"'
-              + ' data-cat="'+escapeHtml(cat)+'" data-w="'+escapeHtml(w)+'">'+escapeHtml(w)+'</button>'
-            ).join('')
+        +   CASES[cat].map(w => {
+              const on = !!caseSel[caseKey(cat, w)];
+              return '<button type="button" class="case-chip'+(on ? ' on' : '')+'" aria-pressed="'+on+'"'
+                + ' data-cat="'+escapeHtml(cat)+'" data-w="'+escapeHtml(w)+'">'+escapeHtml(w)+'</button>';
+            }).join('')
         + '</div></div>';
     }).join('');
     const n = selectedCases().length;
-    $('pickCount').innerHTML = '선택된 케이스 <b>'+n+'</b>개';
+    $('pickCount').innerHTML = '고른 케이스 <b class="num">'+n+'</b>개';
     $('pickClearBtn').hidden = (n === 0);
     $('pickStartBtn').disabled = (n === 0);
-    $('pickStartBtn').textContent = n === 0 ? '케이스를 선택하세요' : '선택한 '+n+'개 케이스 시작';
+    $('pickStartBtn').textContent = n === 0 ? '케이스를 고르세요' : '고른 ' + n + '개로 시작';
   }
   $('casePickList').addEventListener('click', e=>{
     const chip = e.target.closest('.case-chip');
@@ -578,32 +447,29 @@
       persistCaseSel(); renderCasePick();
     }
   });
-  $('pickClearBtn').addEventListener('click', ()=>{
-    caseSel = {};
-    persistCaseSel(); renderCasePick();
-  });
+  $('pickClearBtn').addEventListener('click', ()=>{ caseSel = {}; persistCaseSel(); renderCasePick(); });
   $('pickStartBtn').addEventListener('click', ()=>{
     const items = selectedCases();
-    if(items.length === 0){ alert('케이스를 한 개 이상 선택해 주세요.'); return; }
+    if(items.length === 0){ alert('케이스를 한 개 이상 골라 주세요.'); return; }
     startRound(items);
   });
   renderCasePick();
 
   /* ===================== 추첨 로직 ===================== */
   const KEY = 'wordDrawerState';
-  let pool = [];        // 남은 케이스 [{w,c}]
+  let pool = [];        // 남은 케이스 [{w,c}] — 고르게 섞기 모드에서는 '예정표' 순서
   let drawn = [];       // 뽑힌 케이스 [{w,c}]
-  let usedCats = [];    // 분야 순환: 이번 바퀴에 뽑은 분야
   let lastCat = null;
-  const MODES = ['rotate', 'once', 'random'];
-  let mode = 'rotate';
+  const MODES = ['mix', 'once', 'random'];
+  let mode = 'mix';
+  let planned = false;  // pool이 이미 고르게 섞기 예정표 순서인가
   let catTotals = {};   // 이번 라운드에 포함된 분야 (키 = 분야 목록)
 
   function save(){
     try{
       localStorage.setItem(KEY, JSON.stringify({
         active: !$('drawPanel').hidden,
-        pool, drawn, usedCats, lastCat, mode, catTotals,
+        pool, drawn, lastCat, mode, planned, catTotals,
         last: drawn.length ? drawn[drawn.length-1].w : null
       }));
     }catch(e){}
@@ -628,6 +494,42 @@
     pool = pool.filter(keep);
   }
 
+  function shuffle(a){
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  // ── 고르게 섞기: 라운드 전체의 '예정표'를 한 번에 짠다 ──
+  // 분야에 케이스가 n개면, 그 분야의 k번째 케이스를 라운드의 (k + 난수) / n 지점에 놓는다.
+  // → 큰 분야는 자주, 작은 분야는 드물게 나오고, 어느 분야도 앞이나 뒤에 몰리지 않는다
+  //   (검증: 모든 케이스의 평균 순서 = 라운드 한가운데, 앞쪽 절반에 나올 확률 50%).
+  //   대신 같은 분야끼리는 일정 간격을 두는 경향이 있다 — 완전 랜덤보다 덜 뭉치게 하는 게 목적.
+  // 마지막으로 같은 분야가 연달아 오면, 바로 뒤의 다른 분야 케이스를 앞으로 당겨 끼운다.
+  function planMix(items, prevCat){
+    const byCat = {};
+    items.forEach(it => { (byCat[it.c] = byCat[it.c] || []).push(it); });
+    const slots = [];
+    Object.keys(byCat).forEach(c => {
+      const list = shuffle(byCat[c].slice());
+      const n = list.length;
+      list.forEach((it, k) => slots.push({ it: it, pos: (k + Math.random()) / n }));
+    });
+    slots.sort((a, b) => a.pos - b.pos);
+    const seq = slots.map(s => s.it);
+    for(let i = 0; i < seq.length; i++){
+      const prev = i === 0 ? prevCat : seq[i-1].c;
+      if(prev == null || seq[i].c !== prev) continue;
+      let j = i + 1;
+      while(j < seq.length && seq[j].c === prev) j++;
+      if(j >= seq.length) break;            // 남은 게 모두 같은 분야면 연속은 피할 수 없다
+      seq.splice(i, 0, seq.splice(j, 1)[0]);
+    }
+    return seq;
+  }
+
   function restore(){
     let s;
     try{ s = JSON.parse(localStorage.getItem(KEY)); }catch(e){ s = null; }
@@ -635,7 +537,9 @@
     pool = s.pool.map(normItem);
     drawn = Array.isArray(s.drawn) ? s.drawn.map(normItem) : [];
     lastCat = s.lastCat || null;
-    mode = MODES.indexOf(s.mode) >= 0 ? s.mode : 'rotate';
+    const savedMode = (s.mode === 'rotate') ? 'mix' : s.mode;   // 예전 '분야 순환'은 '고르게 섞기'로 이어간다
+    mode = MODES.indexOf(savedMode) >= 0 ? savedMode : 'mix';
+    planned = (mode === 'mix' && s.mode === 'mix' && s.planned === true);
     catTotals = s.catTotals && Object.keys(s.catTotals).length ? s.catTotals : {};
     if(Object.keys(catTotals).length === 0){
       pool.concat(drawn).forEach(it=>{ if(it.c) catTotals[it.c] = (catTotals[it.c]||0)+1; });
@@ -643,8 +547,6 @@
     dedupeMerged();
     const last = s.last ? (RENAMED[s.last] || s.last) : null;
     setMode(mode, true);
-    // 주의: setMode()가 usedCats를 초기화하므로, 순환 바퀴 상태는 반드시 그 뒤에 복원
-    usedCats = Array.isArray(s.usedCats) ? s.usedCats : [];
     showStage(true);
     if(pool.length === 0){
       const lastItem = drawn.length ? drawn[drawn.length-1] : null;
@@ -652,21 +554,21 @@
         $('result').innerHTML =
           (lastItem.c ? '<span class="cat-badge">'+escapeHtml(lastItem.c)+'</span>' : '')
           + '<span class="word">'+escapeHtml(lastItem.w)+'</span>'
-          + '<div class="done-note">🎉 모두 완료!</div>';
+          + '<span class="done-note">'+drawn.length+'개 모두 뽑았습니다</span>';
       } else {
-        $('result').innerHTML = '<span class="placeholder done">🎉 모든 케이스 완료</span>';
+        $('result').innerHTML = '<span class="placeholder">모두 뽑았습니다</span>';
       }
     } else if(last){
-      $('result').innerHTML = '<span class="placeholder">이어서 뽑으세요 · 직전: '+escapeHtml(last)+'</span>';
+      $('result').innerHTML = '<span class="placeholder">이어서 뽑으세요<small>직전 · '+escapeHtml(last)+'</small></span>';
     } else {
-      $('result').innerHTML = '<span class="placeholder">버튼을 눌러 케이스를 뽑으세요</span>';
+      $('result').innerHTML = '<span class="placeholder">첫 케이스를 뽑으세요</span>';
     }
     render();
   }
 
   function loadPreset(){
     const sel = selectedCats();
-    if(sel.length === 0){ alert('최소 한 개 분야를 선택해 주세요.'); return; }
+    if(sel.length === 0){ alert('분야를 하나 이상 골라 주세요.'); return; }
     const arr = [];
     sel.forEach(cat => CASES[cat].forEach(w => arr.push({w:w, c:cat})));
     startRound(arr);
@@ -674,13 +576,14 @@
 
   function startRound(items){
     pool = items.slice();
-    drawn = []; usedCats = []; lastCat = null;
+    drawn = []; lastCat = null; planned = false;
     catTotals = {};
     items.forEach(it=>{ if(it.c) catTotals[it.c] = (catTotals[it.c]||0)+1; });
     showStage(true);
-    $('result').innerHTML = '<span class="placeholder">버튼을 눌러 케이스를 뽑으세요</span>';
+    $('result').innerHTML = '<span class="placeholder">첫 케이스를 뽑으세요</span>';
     render();
     save();
+    window.scrollTo(0, 0);
   }
 
   function showStage(on){
@@ -702,15 +605,9 @@
     if(mode === 'random' || cats.length === 0){
       return { idx: Math.floor(Math.random()*pool.length), bulkCat: null };
     }
-    if(mode === 'rotate'){
-      let avail = cats.filter(c => usedCats.indexOf(c) === -1);
-      if(avail.length === 0){ usedCats = []; avail = cats.slice(); }
-      // 새 바퀴의 첫 뽑기는 직전 분야를 피한다 — 바퀴 경계뿐 아니라 모드 전환 직후도 포함
-      if(usedCats.length === 0 && avail.length > 1 && lastCat) avail = avail.filter(c => c !== lastCat);
-      const cat = avail[Math.floor(Math.random()*avail.length)];
-      const idxs = pool.map((it,i)=> it.c===cat ? i : -1).filter(i=>i>=0);
-      usedCats.push(cat);
-      return { idx: idxs[Math.floor(Math.random()*idxs.length)], bulkCat: null };
+    if(mode === 'mix'){
+      if(!planned){ pool = planMix(pool, lastCat); planned = true; }
+      return { idx: 0, bulkCat: null };
     }
     // once: 분야 하나를 고르고, 그 분야의 나머지는 이번 라운드에서 뺀다
     const cat = cats[Math.floor(Math.random()*cats.length)];
@@ -727,27 +624,28 @@
     drawn.push({w:item.w, c:item.c});
     lastCat = item.c;
     const finished = pool.length === 0;
-    $('result').innerHTML =
+    const r = $('result');
+    r.innerHTML =
       (item.c ? '<span class="cat-badge">'+escapeHtml(item.c)+'</span>' : '')
       + '<span class="word">'+escapeHtml(item.w)+'</span>'
-      + (finished ? '<div class="done-note">🎉 마지막 케이스 · 모두 완료!</div>' : '');
+      + (finished ? '<span class="done-note">마지막 케이스 · '+drawn.length+'개 모두 뽑았습니다</span>' : '');
+    r.classList.remove('fresh'); void r.offsetWidth; r.classList.add('fresh');   // 새 케이스가 나왔다는 신호
     render();
     save();
   }
 
   function render(){
     const n = pool.length;
-    const remCats = uniqueCats().length;
-    if(n === 0){
-      $('probText').textContent = '모든 케이스를 뽑았습니다';
-    } else if(mode === 'random' || remCats === 0){
-      $('probText').innerHTML = '각 케이스가 뽑힐 확률 <b>1/'+n+'</b>';
-    } else if(mode === 'rotate'){
-      $('probText').innerHTML = '분야 순환 · 남은 분야 <b>'+remCats+'</b>개';
-    } else {
-      $('probText').innerHTML = '분야당 1개 · 남은 분야 <b>'+remCats+'</b>개';
-    }
-    $('drawBtn').disabled = (n === 0);
+    let note;
+    if(n === 0) note = '모두 뽑았습니다. [처음으로]에서 새 라운드를 시작할 수 있습니다.';
+    else if(mode === 'mix') note = '분야 크기 비율대로 고르게 섞고, 같은 분야가 연달아 나오지 않게 합니다.';
+    else if(mode === 'once') note = '분야마다 한 개씩만 뽑습니다. 남은 분야 ' + uniqueCats().length + '개.';
+    else note = '남은 ' + n + '개 중에서 무작위로 뽑습니다.';
+    $('probText').textContent = note;
+    const btn = $('drawBtn');
+    btn.disabled = (n === 0);
+    btn.textContent = n === 0 ? '모두 뽑았습니다' : (drawn.length ? '다음 케이스' : '첫 케이스 뽑기');
+    document.querySelector('.kbd-hint').hidden = (n === 0);
     renderProgress();
     renderCats();
     renderHistory();
@@ -760,7 +658,7 @@
       done = total - uniqueCats().length;          // 뽑은 분야 수
       unit = ' 분야';
     } else {
-      total = drawn.length + pool.length;   // 끝까지 뽑았을 때의 총 추출 수
+      total = drawn.length + pool.length;          // 끝까지 뽑았을 때의 총 추출 수
       done = drawn.length;
     }
     $('progDone').textContent = done;
@@ -783,14 +681,14 @@
       const fracTxt = onceMode ? (consumed ? '뽑음' : '대기') : (done + '/' + total);
       const pct = onceMode ? (consumed ? 100 : 0) : (total ? (done/total*100) : 0);
       return '<div class="cat-card'+(consumed?' done':'')+'">'
-        + '<div class="cat-top"><span class="cat-name">'+escapeHtml(c)+'</span>'
-        + '<span class="cat-frac">'+fracTxt+'</span></div>'
-        + '<div class="cat-bar"><span style="width:'+pct+'%"></span></div></div>';
+        + '<span class="cat-name">'+escapeHtml(c)+'</span>'
+        + '<div class="cat-bar"><span style="width:'+pct+'%"></span></div>'
+        + '<span class="cat-frac">'+fracTxt+'</span></div>';
     }).join('');
   }
 
   function renderHistory(){
-    $('histCount').textContent = drawn.length ? '· '+drawn.length : '';
+    $('histCount').textContent = drawn.length ? String(drawn.length) : '';
     const box = $('historyList');
     if(drawn.length === 0){
       box.innerHTML = '<li class="hist-empty">아직 뽑은 케이스가 없습니다.</li>';
@@ -800,23 +698,26 @@
       const num = drawn.length - i;
       return '<li class="hist-row"><span class="hist-n">'+num+'</span>'
         + '<span class="hist-w">'+escapeHtml(it.w)+'</span>'
-        + (it.c ? '<span class="hist-c">'+escapeHtml(it.c)+'</span>' : '')+'</li>';
+        + (it.c ? '<span class="hist-c">'+escapeHtml(it.c)+'</span>' : '<span></span>')+'</li>';
     }).join('');
   }
 
   function setMode(m, silent){
-    if(MODES.indexOf(m) < 0) m = 'rotate';
+    if(MODES.indexOf(m) < 0) m = 'mix';
     const changed = (m !== mode);
     mode = m;
-    document.querySelectorAll('#modeSelect button').forEach(b=>
-      b.classList.toggle('active', b.dataset.mode === m));
-    if(!changed) return;   // 켜져 있는 모드를 다시 눌러도 진행 중인 순환 바퀴는 그대로
-    usedCats = [];         // 다른 모드로 바뀌면 새 바퀴부터
+    document.querySelectorAll('#modeSelect button').forEach(b=>{
+      const on = b.dataset.mode === m;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+    if(!changed) return;   // 켜져 있는 방식을 다시 눌러도 진행 중인 예정표는 그대로
+    planned = false;       // 방식이 바뀌면, 고르게 섞기로 돌아올 때 남은 케이스로 예정표를 새로 짠다
     if(!silent){ render(); save(); }
   }
 
   function reset(){
-    pool = []; drawn = []; usedCats = []; lastCat = null;
+    pool = []; drawn = []; lastCat = null; planned = false;
     catTotals = {};
     clearSaved();
     showStage(false);
@@ -825,7 +726,7 @@
   $('presetBtn').addEventListener('click', loadPreset);
   $('drawBtn').addEventListener('click', draw);
   $('resetBtn').addEventListener('click', ()=>{
-    if(drawn.length && !confirm('진행 중인 추첨을 초기화할까요?')) return;
+    if(drawn.length && pool.length && !confirm('진행 중인 라운드를 끝내고 처음으로 돌아갈까요?')) return;
     reset();
   });
   document.querySelectorAll('#modeSelect button').forEach(b=>
@@ -838,7 +739,7 @@
     if(tag === 'input' || tag === 'textarea' || tag === 'button') return;
     if($('drawPanel').hidden) return;
     const help = document.getElementById('installHelp');
-    if(help && !help.hidden) return;   // 설치 안내 창이 떠 있으면 뒤에서 뽑지 않는다
+    if(help && !help.hidden) return;   // 설치 안내가 떠 있으면 뒤에서 뽑지 않는다
     e.preventDefault();
     if(e.repeat) return;
     draw();
@@ -886,42 +787,42 @@
     var e = env(), steps, note = '';
     if(e.inApp){
       steps = [
-        '지금은 <b>카카오톡·인스타그램 등 앱 안의 브라우저</b>예요. 여기서는 설치가 되지 않습니다.',
+        '지금은 <b>카카오톡·인스타그램 등 앱 안의 브라우저</b>입니다. 여기서는 설치되지 않습니다.',
         '오른쪽 위 <b>⋮ 또는 공유 아이콘</b>을 누르세요.',
-        '<b>‘다른 브라우저로 열기’</b>(Chrome·Safari 등)를 선택한 뒤, 그 화면에서 다시 설치하세요.'
+        '<b>다른 브라우저로 열기</b>(Chrome·Safari)를 고른 뒤, 그 화면에서 다시 설치하세요.'
       ];
     } else if(e.ios){
       steps = [
-        '아이폰·아이패드는 <b>Safari(사파리)</b>에서만 설치돼요. (크롬 앱은 안 됩니다)',
-        '화면 아래 가운데의 <b>공유 버튼</b>(□에 ↑ 표시)을 누르세요.',
-        '목록을 내려 <b>‘홈 화면에 추가’</b> → 오른쪽 위 <b>‘추가’</b>.'
+        '아이폰·아이패드는 <b>Safari</b>에서만 설치됩니다.',
+        '화면 아래 가운데의 <b>공유 버튼</b>(□에 ↑)을 누르세요.',
+        '목록에서 <b>홈 화면에 추가</b> → 오른쪽 위 <b>추가</b>.'
       ];
-      note = '설치하면 사파리 주소창 없이 앱처럼 전체화면으로 열립니다.';
+      note = '설치하면 주소창 없이 전체 화면으로 열립니다.';
     } else if(e.samsung){
       steps = [
-        '삼성 인터넷 하단의 <b>≡ 메뉴</b>를 누르세요.',
-        '<b>‘현재 페이지 추가’ → ‘홈 화면’</b>을 선택하세요.',
+        '삼성 인터넷 아래쪽의 <b>≡ 메뉴</b>를 누르세요.',
+        '<b>현재 페이지 추가 → 홈 화면</b>을 고르세요.',
         '홈 화면에 생긴 아이콘으로 실행하면 됩니다.'
       ];
     } else if(e.android){
       steps = [
         '크롬 오른쪽 위 <b>⋮ 메뉴</b>를 누르세요.',
-        '<b>‘앱 설치’</b> 또는 <b>‘홈 화면에 추가’</b>를 선택하세요.',
-        '<b>설치</b>를 누르면 완료됩니다.'
+        '<b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 고르세요.',
+        '<b>설치</b>를 누르면 끝납니다.'
       ];
     } else if(e.firefox){
       steps = [
-        '지금 브라우저(Firefox 등)는 <b>앱 설치를 지원하지 않아요.</b>',
-        '<b>Chrome(크롬)</b> 또는 <b>Edge(엣지)</b>로 이 페이지를 다시 열어주세요.',
-        '그 브라우저에서 [설치] 버튼을 누르면 됩니다.'
+        '지금 브라우저(Firefox 등)는 <b>앱 설치를 지원하지 않습니다.</b>',
+        '<b>Chrome</b> 또는 <b>Edge</b>로 이 페이지를 다시 여세요.',
+        '그 브라우저에서 [앱 설치]를 누르면 됩니다.'
       ];
     } else {
       steps = [
-        '주소창(URL) <b>오른쪽 끝의 설치 아이콘</b>(⊕ 또는 모니터 모양)을 누르세요.',
-        '안 보이면 <b>⋮ 메뉴 → ‘앱 설치’ / ‘CPX 추출기 설치’</b>를 선택하세요.',
-        '창이 뜨면 <b>설치</b>를 누르면 완료됩니다.'
+        '주소창 <b>오른쪽 끝의 설치 아이콘</b>(⊕ 또는 모니터 모양)을 누르세요.',
+        '보이지 않으면 <b>⋮ 메뉴 → 앱 설치 / CPX 추출기 설치</b>를 고르세요.',
+        '창이 뜨면 <b>설치</b>를 누르면 끝납니다.'
       ];
-      note = '설치 아이콘이 없다면 이미 설치됐거나, 페이지를 새로고침하면 나타납니다.';
+      note = '설치 아이콘이 없다면 이미 설치됐거나, 새로고침하면 나타납니다.';
     }
     helpBody.innerHTML = '<ol>' + steps.map(function(s){ return '<li>'+s+'</li>'; }).join('') + '</ol>';
     helpNote.textContent = note;

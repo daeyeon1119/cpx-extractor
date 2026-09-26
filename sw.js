@@ -1,5 +1,5 @@
 /* CPX 추출기 서비스 워커 — 오프라인 캐시 */
-const CACHE = 'cpx-extractor-v14';
+const CACHE = 'cpx-extractor-v15';
 const NAV_TIMEOUT_MS = 4000;   // 신호가 약하면 이 시간 뒤 저장된 화면으로 연다
 const ASSETS = [
   './',
@@ -17,9 +17,13 @@ function cacheable(res) {
   return !!res && res.ok && res.type === 'basic' && !res.redirected;
 }
 
+// GitHub Pages는 파일을 10분간 브라우저에 캐시하게 한다(max-age=600).
+// 그 캐시를 거치면 배포 직후 옛 파일이 저장·표시되므로, 서버에서 직접 받는다.
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then((c) => c.addAll(ASSETS.map((url) => new Request(url, { cache: 'reload' }))))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -33,7 +37,8 @@ self.addEventListener('activate', (e) => {
 
 async function handleNavigate(req) {
   const saved = await caches.match('./index.html') || await caches.match('./');
-  const network = fetch(req).then((res) => {
+  // 화면은 매번 서버에 최신인지 확인한다 (바뀐 게 없으면 짧은 304 응답만 오간다)
+  const network = fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }).then((res) => {
     if (cacheable(res)) {
       const copy = res.clone();
       caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(() => {});

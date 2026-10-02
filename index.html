@@ -568,24 +568,12 @@ button:disabled{cursor:not-allowed}
       .map(r => ({ idx: r.idx, lastCat: r.lastCat || null,
                    removed: (Array.isArray(r.removed) ? r.removed : []).map(x => ({ i: x.i, it: normItem(x.it) })) }));
     if(undoStack.length > drawn.length) undoStack = drawn.length ? undoStack.slice(-drawn.length) : [];   // 뽑은 수보다 많은 기록은 버린다
-    const last = s.last ? (RENAMED[s.last] || s.last) : null;
     setMode(mode, true);
     showStage(true);
-    if(pool.length === 0){
-      const lastItem = drawn.length ? drawn[drawn.length-1] : null;
-      if(lastItem){
-        $('result').innerHTML =
-          (lastItem.c ? '<span class="cat-badge">'+escapeHtml(lastItem.c)+'</span>' : '')
-          + '<span class="word">'+escapeHtml(lastItem.w)+'</span>'
-          + '<span class="done-note">'+drawn.length+'개 모두 뽑았습니다</span>';
-      } else {
-        $('result').innerHTML = '<span class="placeholder">모두 뽑았습니다</span>';
-      }
-    } else if(last){
-      $('result').innerHTML = '<span class="placeholder">이어서 뽑으세요<small>직전 · '+escapeHtml(last)+'</small></span>';
-    } else {
-      $('result').innerHTML = '<span class="placeholder">첫 케이스를 뽑으세요</span>';
-    }
+    // 다시 열어도 닫기 전 화면 그대로 — 마지막으로 뽑은 케이스가 계속 떠 있다
+    const lastItem = drawn.length ? drawn[drawn.length-1] : null;
+    if(lastItem) showCase(lastItem, pool.length === 0 ? doneNote() : '', false);
+    else $('result').innerHTML = '<span class="placeholder">'+(pool.length ? '첫 케이스를 뽑으세요' : '모두 뽑았습니다')+'</span>';
     render();
   }
 
@@ -638,15 +626,17 @@ button:disabled{cursor:not-allowed}
     return { idx: idxs[Math.floor(Math.random()*idxs.length)], bulkCat: cat };
   }
 
-  // 결과 영역에 케이스 하나를 보여준다 (note: 아래에 붙는 짧은 안내)
-  function showCase(item, noteHtml){
+  // 결과 영역에 케이스 하나를 보여준다 (noteHtml: 아래에 붙는 짧은 안내, animate: 바뀌었다는 신호를 줄지)
+  function showCase(item, noteHtml, animate){
     const r = $('result');
     r.innerHTML =
       (item.c ? '<span class="cat-badge">'+escapeHtml(item.c)+'</span>' : '')
       + '<span class="word">'+escapeHtml(item.w)+'</span>'
       + (noteHtml || '');
-    r.classList.remove('fresh'); void r.offsetWidth; r.classList.add('fresh');   // 케이스가 바뀌었다는 신호
+    r.classList.remove('fresh');
+    if(animate !== false){ void r.offsetWidth; r.classList.add('fresh'); }   // 케이스가 바뀌었다는 신호
   }
+  function doneNote(){ return '<span class="done-note">마지막 케이스 · '+drawn.length+'개 모두 뽑았습니다</span>'; }
 
   function draw(){
     if(pool.length === 0) return;
@@ -662,8 +652,7 @@ button:disabled{cursor:not-allowed}
     undoStack.push(rec);
     drawn.push({w:item.w, c:item.c});
     lastCat = item.c;
-    showCase(item, pool.length === 0
-      ? '<span class="done-note">마지막 케이스 · '+drawn.length+'개 모두 뽑았습니다</span>' : '');
+    showCase(item, pool.length === 0 ? doneNote() : '');
     render();
     save();
   }
@@ -672,9 +661,28 @@ button:disabled{cursor:not-allowed}
   // 그 뽑기 직전으로 되돌리고, 다음 뽑기는 원래 규칙대로 새로 뽑는다.
   // 되돌린 케이스를 일부러 넣거나 빼지 않는다 — 다시 나올 수도, 안 나올 수도 있다(다른 케이스와 같은 몫).
   // 화면에도 되돌린 케이스 이름을 다시 띄우지 않는다(잘못 본 것을 또 보여주지 않게).
+  // 되돌리기 기록이 없는 뽑기(되돌리기 기능이 생기기 전 버전에서 뽑은 것)의 기록을 저장된 상태로 재구성한다.
+  // 정확히 복원할 수 있을 때만 기록을 만들고, 아니면 null (엉뚱하게 되돌리지 않도록).
+  function legacyRecord(){
+    if(!drawn.length) return null;
+    const item = drawn[drawn.length-1];
+    const rec = { idx: pool.length, removed: [], lastCat: drawn.length > 1 ? drawn[drawn.length-2].c : null };
+    const c = item.c;
+    const total = c ? catTotals[c] : 0;
+    const drawnOfC = drawn.filter(it => it.c === c);
+    if(c && total > drawnOfC.length && !pool.some(it => it.c === c)){
+      // 이 분야가 '분야당 1개'로 통째로 빠졌다 — 함께 빠진 케이스를 정확히 알 수 있을 때만 되돌린다
+      if(!CASES[c] || total !== CASES[c].length) return null;
+      const seen = new Set(drawnOfC.map(it => it.w));
+      CASES[c].filter(w => !seen.has(w)).forEach(w => rec.removed.push({ i: pool.length + rec.removed.length, it: {w: w, c: c} }));
+    }
+    return rec;
+  }
+  function canUndo(){ return drawn.length > 0 && (undoStack.length > 0 || legacyRecord() !== null); }
+
   function undo(){
-    if(!drawn.length || !undoStack.length) return;
-    const rec = undoStack.pop();
+    if(!canUndo()) return;
+    const rec = undoStack.length ? undoStack.pop() : legacyRecord();
     const item = drawn.pop();
     rec.removed.forEach(r => pool.splice(r.i, 0, r.it));   // 자리 오름차순으로 다시 끼우면 원래 순서가 된다
     pool.splice(rec.idx, 0, {w:item.w, c:item.c});
@@ -697,7 +705,7 @@ button:disabled{cursor:not-allowed}
     const btn = $('drawBtn');
     btn.disabled = (n === 0);
     btn.textContent = n === 0 ? '모두 뽑았습니다' : (drawn.length ? '다음 케이스' : '첫 케이스 뽑기');
-    $('undoBtn').disabled = !(drawn.length && undoStack.length);
+    $('undoBtn').disabled = !canUndo();
     $('kbdHint').hidden = (n === 0 && $('undoBtn').disabled);
     renderProgress();
     renderCats();

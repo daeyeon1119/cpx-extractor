@@ -62,6 +62,6 @@ CPX 추출기 — 오프라인 설치형 앱 (PWA)
 
 앱 내용을 수정했다면
 --------------------
-  index.html 을 고친 뒤에는 sw.js 맨 위 'cpx-extractor-v17' 같은
+  index.html 을 고친 뒤에는 sw.js 맨 위 'cpx-extractor-v18' 같은
   버전 숫자를 하나 올려주세요. 그래야 설치된 앱이
   다음 실행 때 새 버전으로 갱신됩니다.

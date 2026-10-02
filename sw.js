@@ -1,5 +1,5 @@
 /* CPX 추출기 서비스 워커 — 오프라인 캐시 */
-const CACHE = 'cpx-extractor-v16';
+const CACHE = 'cpx-extractor-v17';
 const NAV_TIMEOUT_MS = 4000;   // 신호가 약하면 이 시간 뒤 저장된 화면으로 연다
 const ASSETS = [
   './',

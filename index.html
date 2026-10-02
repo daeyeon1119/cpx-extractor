@@ -69,6 +69,13 @@ button:disabled{cursor:not-allowed}
 .btn-primary:hover:not(:disabled){background:var(--ink-2)}
 .btn-primary:active:not(:disabled){transform:translateY(1px)}
 .btn-primary:disabled{background:var(--line);color:var(--faint)}
+/* 보조 버튼 — 주 버튼보다 한 단계 낮은 위계 (테두리만) */
+.btn-secondary{display:flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;height:56px;padding:0 16px;
+  border:1px solid var(--line-2);border-radius:2px;background:var(--surface);font-size:14px;font-weight:600;color:var(--ink-2)}
+.btn-secondary:hover:not(:disabled){border-color:var(--ink);color:var(--ink)}
+.btn-secondary:active:not(:disabled){transform:translateY(1px)}
+.btn-secondary:disabled{background:transparent;border-color:var(--line);color:var(--faint)}
+.btn-secondary svg{width:16px;height:16px}
 
 /* ── 시작 화면: 첫 화면이 곧 기능 ── */
 .start{max-width:640px;padding-top:28px}
@@ -143,6 +150,8 @@ button:disabled{cursor:not-allowed}
 
 .draw-bar{grid-area:bar;align-self:start;position:sticky;bottom:0;z-index:5;margin-top:20px;
   padding:12px 0 calc(12px + env(safe-area-inset-bottom));background:var(--bg)}
+.draw-row{display:flex;gap:8px}
+.draw-row .btn-primary{flex:1;min-width:0}
 .kbd-hint{margin-top:8px;text-align:center}
 @media(hover:none){.kbd-hint{display:none}}
 @media(max-width:860px){
@@ -271,8 +280,14 @@ button:disabled{cursor:not-allowed}
         </aside>
 
         <div class="draw-bar">
-          <button class="btn-primary" id="drawBtn">첫 케이스 뽑기</button>
-          <p class="caption kbd-hint">스페이스바로도 뽑을 수 있습니다</p>
+          <div class="draw-row">
+            <button type="button" class="btn-secondary" id="undoBtn" disabled>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 3.5 2.5 6.5l3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/><path d="M3 6.5h6.25a3.75 3.75 0 0 1 0 7.5H7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+              되돌리기
+            </button>
+            <button class="btn-primary" id="drawBtn">첫 케이스 뽑기</button>
+          </div>
+          <p class="caption kbd-hint" id="kbdHint">스페이스바 뽑기 · Ctrl+Z 되돌리기</p>
         </div>
       </div>
     </section>
@@ -464,12 +479,15 @@ button:disabled{cursor:not-allowed}
   let mode = 'mix';
   let planned = false;  // pool이 이미 고르게 섞기 예정표 순서인가
   let catTotals = {};   // 이번 라운드에 포함된 분야 (키 = 분야 목록)
+  // 되돌리기 기록 — 뽑을 때마다 '뽑기 직전으로 돌아가는 데 필요한 것'만 쌓는다
+  // { idx: 뽑힌 케이스가 있던 자리, removed: 분야당 1개로 함께 빠진 케이스와 자리, lastCat: 그 전 분야 }
+  let undoStack = [];
 
   function save(){
     try{
       localStorage.setItem(KEY, JSON.stringify({
         active: !$('drawPanel').hidden,
-        pool, drawn, lastCat, mode, planned, catTotals,
+        pool, drawn, lastCat, mode, planned, catTotals, undo: undoStack,
         last: drawn.length ? drawn[drawn.length-1].w : null
       }));
     }catch(e){}
@@ -545,6 +563,11 @@ button:disabled{cursor:not-allowed}
       pool.concat(drawn).forEach(it=>{ if(it.c) catTotals[it.c] = (catTotals[it.c]||0)+1; });
     }
     dedupeMerged();
+    undoStack = (Array.isArray(s.undo) ? s.undo : [])
+      .filter(r => r && typeof r.idx === 'number')
+      .map(r => ({ idx: r.idx, lastCat: r.lastCat || null,
+                   removed: (Array.isArray(r.removed) ? r.removed : []).map(x => ({ i: x.i, it: normItem(x.it) })) }));
+    if(undoStack.length > drawn.length) undoStack = drawn.length ? undoStack.slice(-drawn.length) : [];   // 뽑은 수보다 많은 기록은 버린다
     const last = s.last ? (RENAMED[s.last] || s.last) : null;
     setMode(mode, true);
     showStage(true);
@@ -576,7 +599,7 @@ button:disabled{cursor:not-allowed}
 
   function startRound(items){
     pool = items.slice();
-    drawn = []; lastCat = null; planned = false;
+    drawn = []; lastCat = null; planned = false; undoStack = [];
     catTotals = {};
     items.forEach(it=>{ if(it.c) catTotals[it.c] = (catTotals[it.c]||0)+1; });
     showStage(true);
@@ -615,21 +638,50 @@ button:disabled{cursor:not-allowed}
     return { idx: idxs[Math.floor(Math.random()*idxs.length)], bulkCat: cat };
   }
 
-  function draw(){
-    if(pool.length === 0) return;
-    const { idx, bulkCat } = pickIndex();
-    const item = pool[idx];
-    pool.splice(idx,1);
-    if(bulkCat){ pool = pool.filter(it => it.c !== bulkCat); }
-    drawn.push({w:item.w, c:item.c});
-    lastCat = item.c;
-    const finished = pool.length === 0;
+  // 결과 영역에 케이스 하나를 보여준다 (note: 아래에 붙는 짧은 안내)
+  function showCase(item, noteHtml){
     const r = $('result');
     r.innerHTML =
       (item.c ? '<span class="cat-badge">'+escapeHtml(item.c)+'</span>' : '')
       + '<span class="word">'+escapeHtml(item.w)+'</span>'
-      + (finished ? '<span class="done-note">마지막 케이스 · '+drawn.length+'개 모두 뽑았습니다</span>' : '');
-    r.classList.remove('fresh'); void r.offsetWidth; r.classList.add('fresh');   // 새 케이스가 나왔다는 신호
+      + (noteHtml || '');
+    r.classList.remove('fresh'); void r.offsetWidth; r.classList.add('fresh');   // 케이스가 바뀌었다는 신호
+  }
+
+  function draw(){
+    if(pool.length === 0) return;
+    const { idx, bulkCat } = pickIndex();   // 고르게 섞기는 여기서 예정표가 확정된다
+    const rec = { idx: idx, removed: [], lastCat: lastCat };
+    const item = pool[idx];
+    pool.splice(idx,1);
+    if(bulkCat){
+      const kept = [];
+      pool.forEach((it, i) => { if(it.c === bulkCat) rec.removed.push({ i: i, it: it }); else kept.push(it); });
+      pool = kept;
+    }
+    undoStack.push(rec);
+    drawn.push({w:item.w, c:item.c});
+    lastCat = item.c;
+    showCase(item, pool.length === 0
+      ? '<span class="done-note">마지막 케이스 · '+drawn.length+'개 모두 뽑았습니다</span>' : '');
+    render();
+    save();
+  }
+
+  // 되돌리기 = 시간만 과거로. 뽑은 기록·남은 케이스(분야당 1개로 함께 빠진 것까지)·직전 분야를
+  // 그 뽑기 직전으로 되돌리고, 다음 뽑기는 원래 규칙대로 새로 뽑는다.
+  // 되돌린 케이스를 일부러 넣거나 빼지 않는다 — 다시 나올 수도, 안 나올 수도 있다(다른 케이스와 같은 몫).
+  // 화면에도 되돌린 케이스 이름을 다시 띄우지 않는다(잘못 본 것을 또 보여주지 않게).
+  function undo(){
+    if(!drawn.length || !undoStack.length) return;
+    const rec = undoStack.pop();
+    const item = drawn.pop();
+    rec.removed.forEach(r => pool.splice(r.i, 0, r.it));   // 자리 오름차순으로 다시 끼우면 원래 순서가 된다
+    pool.splice(rec.idx, 0, {w:item.w, c:item.c});
+    lastCat = rec.lastCat;
+    planned = false;   // 고르게 섞기: 다음 뽑기에서 남은 케이스로 예정표를 원래 규칙대로 새로 짠다
+    if(drawn.length) showCase(drawn[drawn.length-1], '');
+    else $('result').innerHTML = '<span class="placeholder">첫 케이스를 뽑으세요</span>';
     render();
     save();
   }
@@ -645,7 +697,8 @@ button:disabled{cursor:not-allowed}
     const btn = $('drawBtn');
     btn.disabled = (n === 0);
     btn.textContent = n === 0 ? '모두 뽑았습니다' : (drawn.length ? '다음 케이스' : '첫 케이스 뽑기');
-    document.querySelector('.kbd-hint').hidden = (n === 0);
+    $('undoBtn').disabled = !(drawn.length && undoStack.length);
+    $('kbdHint').hidden = (n === 0 && $('undoBtn').disabled);
     renderProgress();
     renderCats();
     renderHistory();
@@ -717,7 +770,7 @@ button:disabled{cursor:not-allowed}
   }
 
   function reset(){
-    pool = []; drawn = []; lastCat = null; planned = false;
+    pool = []; drawn = []; lastCat = null; planned = false; undoStack = [];
     catTotals = {};
     clearSaved();
     showStage(false);
@@ -725,6 +778,8 @@ button:disabled{cursor:not-allowed}
 
   $('presetBtn').addEventListener('click', loadPreset);
   $('drawBtn').addEventListener('click', draw);
+  $('undoBtn').addEventListener('click', undo);
+  if(/Mac|iPhone|iPad/.test(navigator.platform || '')) $('kbdHint').textContent = '스페이스바 뽑기 · ⌘Z 되돌리기';
   $('resetBtn').addEventListener('click', ()=>{
     if(drawn.length && pool.length && !confirm('진행 중인 라운드를 끝내고 처음으로 돌아갈까요?')) return;
     reset();
@@ -732,17 +787,20 @@ button:disabled{cursor:not-allowed}
   document.querySelectorAll('#modeSelect button').forEach(b=>
     b.addEventListener('click', ()=> setMode(b.dataset.mode)));
 
-  // 스페이스바로 뽑기 — 한 번 누를 때 한 개만 (꾹 누를 때의 키 반복은 무시)
+  // 단축키 — 스페이스바: 뽑기 / Ctrl·⌘+Z: 되돌리기. 한 번 누를 때 한 번만 (꾹 누를 때의 키 반복은 무시)
   document.addEventListener('keydown', e=>{
-    if(e.code !== 'Space') return;
+    const isSpace = e.code === 'Space';
+    const isUndo = (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.code === 'KeyZ' || e.key === 'z' || e.key === 'Z');
+    if(!isSpace && !isUndo) return;
     const tag = (e.target.tagName || '').toLowerCase();
-    if(tag === 'input' || tag === 'textarea' || tag === 'button') return;
+    if(tag === 'input' || tag === 'textarea') return;
+    if(isSpace && tag === 'button') return;   // 버튼에 초점이 있으면 그 버튼이 스페이스를 처리한다
     if($('drawPanel').hidden) return;
     const help = document.getElementById('installHelp');
-    if(help && !help.hidden) return;   // 설치 안내가 떠 있으면 뒤에서 뽑지 않는다
+    if(help && !help.hidden) return;   // 설치 안내가 떠 있으면 뒤에서 동작하지 않는다
     e.preventDefault();
     if(e.repeat) return;
-    draw();
+    if(isSpace) draw(); else undo();
   });
 
   /* ===================== 초기화 ===================== */
